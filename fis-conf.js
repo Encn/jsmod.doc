@@ -8,7 +8,7 @@ fis.set('module', 'jsmod.pc');
 fis.set('project.files', ['src/**', 'map.json']);
 
 //设置 HTML 部署路径
-fis.match(/^\/src\/web\/\/view\/(.*\.html)$/i, {
+fis.match(/^\/src\/web\/view\/(.*\.html)$/i, {
   release: 'templates/$1',
   isMod: true
 });
