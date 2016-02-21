@@ -20,6 +20,10 @@ fis.config.merge({
             {
                 reg : /(build\.sh|package\.json|README\.md)$/i,
                 release : false
+            },
+            {
+                reg: /^\/api\/(.*)$/i,
+                release: '/api/$1'
             }
         ]
     }

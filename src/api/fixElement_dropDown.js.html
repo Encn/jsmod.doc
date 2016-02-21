@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: fixElement/dropDown.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: fixElement/dropDown.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * 下拉组建模块，为各种下拉提供支持
+ * @module jsmod/ui/fixElement/dropDown
+ */
+define("jsmod/ui/fixElement/dropDown", function (require, exports, module) {
+    /**
+     * dropDown控件中一条数据的对象
+     * @typedef {object} DropItem
+     * @property {string} key    key参数，触发事件时的回调传递的参数之一
+     * @property {string} value  value参数，注意value中不能有html标记，触发事件时的回调传递的参数之一
+     * @property {string} [html] 当没有传入此参数时会用value代替
+     */
+
+    var _option, FixElement, main;
+
+    _option = {
+        targetType: "bottom",
+        preventShow: true,
+        keyPressShow: true,
+        syncInput: true
+    }
+
+    main = require("jsmod/main");
+
+    FixElement = require("jsmod/ui/fixElement");
+
+    /**
+     * 下拉组建，继承自 {@link module:jsmod/ui/fixElement FixElement}
+     * 实例化的第一个参数为数据, 第二个为配置参数.
+     * 
+     * @alias module:jsmod/ui/fixElement/dropDown
+     * @constructor
+     * @extends module:jsmod/ui/fixElement
+     * @param {(DropItem[]|object[])} items                        传入的数据集合, 如果配置了optoin.fun, 则可以传入任意对象集合
+     * @param {object}                option                       配置参数
+     * @param {string}                [option.className]           添加自定义的className
+     * @param {function}              [option.fun]                 会将index, item作为参数传递。返回数据结构为 {@link DropItem}
+     * @param {function}              [option.keyPressShow=true]   当target为input时，按上下键是否显示下拉
+     * @param {function}              [option.syncInput=true]      当target为input时，按上下键选中时是否同步填充
+     * 
+     * @param {(dom|selector)}        [option.target]              定位到这个元素附近 (取选择器中获取的第一个元素作为定位元素)
+     * @param {string}                [option.targetType=bottom]   定位方式, 可选值: center, top, bottom, right, left
+     * @param {Coords}                [option.offset]              定位时的偏移
+     * @param {Coords}                [option.position]            没有 target 参数时, 采取绝对定位方式时传入的坐标
+     * @param {bool}                  [option.fixed=false]         是否使用 fixed 定位, 仅当采用坐标定位时可用, ie6 会自动加入 hack 支持 fix 定位
+     * @param {int}                   [option.zIndex=1000]         元素的 z-index
+     * @param {bool}                  [option.preventShow=true]    是否阻止初始化时显示元素
+     * @param {bool}                  [option.preventResize=false] 是否阻止resize时重定位元素
+     * @example
+     * items 参数的配置:
+     * [
+     *     {"key": "fish", value: "鱼", html: "&lt;b>一只鱼&lt;/b>"},
+     *     {"key": "cat", value: "猫", html: "&lt;b>一条猫&lt;/b>"}
+     * ]
+     * option.fun 的使用：
+     * // items 的参数
+     * [
+     *     {"name": "wang", "sex": 0},
+     *     {"name": "li", "sex": 1}
+     * ]
+     * // option.fun
+     * option.fun = function(index, obj) {
+     *    // obj 为 items 中的一条数据
+     *    var html = obj.name + (obj.sex ? "is man" : "is woman");
+     *    
+     *    // 返回值为 DropItem 数据格式
+     *    return {
+     *        key: index,  // 对数据的唯一标识
+     *        value: obj.name, // 记录原始数据的值
+     *        html: html // 用于下拉控件显示时的 html
+     *    }
+     * }
+     */
+    var DropDown = function (items, option) {
+        var self = this;
+
+        self.option = $.extend({}, _option, option);
+        self.items = items;
+        self.element = self.generateList();
+
+        FixElement.apply(self, [self.element, self.option]);
+
+        // 显示、隐藏时重置上下选择
+        $(self).on("hidden", function () {
+            var cur = self._element.find(".mod-dropdown-item-cur");
+
+            if (cur.length > 0) {
+                cur.removeClass("mod-dropdown-item-cur");
+            }
+        });
+
+        $(self).on("shown", function () {
+            var cur = self._element.find(".mod-dropdown-item-cur");
+
+            if (cur.length > 0) {
+                cur.removeClass("mod-dropdown-item-cur");
+            }
+        });
+    };
+
+    $.extend(DropDown.prototype, {}, FixElement.prototype);
+    DropDown.prototype.constructor = DropDown;
+
+    $.extend(DropDown.prototype, 
+    /** @lends module:jsmod/ui/fixElement/dropDown.prototype */
+    {
+        /**
+         * 生成list数据
+         * @private
+         */
+        generateList: function () {
+            var self = this,
+                option = self.option,
+                items = self.items,
+                html = [];
+
+            if (items.length == 0) {
+                return '&lt;div class="mod-dropdown-empty">&lt;/div>';
+            }
+
+            html.push('&lt;ul class="mod-dropdown ' + (option.className || '') + '">');
+
+            $.each(items, function (index, item) {
+                var data;
+
+                if (option.fun &amp;&amp; $.isFunction(option.fun)) {
+                    data = option.fun(index, item);
+                } else {
+                    data = item;
+                }
+
+                html.push('&lt;li class="mod-dropdown-item" data-value="' + data.value + '" data-key="' + data.key + '">' + (data.html || data.value) + '&lt;/li>');
+            });
+
+            html.push("&lt;/ul>");
+
+            return html.join("");
+        },
+        /**
+         * 重新添加数据进行绘制，如果不传入参数只进行重置
+         * @public
+         * @param {array}          [items]                    需要放到dropdown上的数组数据
+         * @param {string}         [items[].key]              触发事件时的回调传递的参数之一，如果配置option.fun则无需传入
+         * @param {string}         [items[].value]            实际渲染的HTML数据，如果配置option.fun则无需传入
+         */
+        resetItems: function (items, option) {
+            var self = this,
+                html;
+
+            self.items = items || self.items;
+            html = self.generateList();
+
+            self.redraw(html);
+        },
+        /**
+         * 选中某个 item
+         * @public
+         * @param {int} index item 的索引
+         */
+        active: function (index) {
+            var self = this;
+
+            self._element.find("li.mod-dropdown-item:eq(" + index + ")").trigger("click");
+        },
+        /**
+         * 获取某个索引下的 item
+         * @public
+         * @param {int} index    索引
+         * @return {dom} element 当前索引的 element
+         */
+        getItem: function (index) {
+            var self = this;
+
+            return self._element.find("li.mod-dropdown-item:eq(" + index + ")");
+        },
+        /**
+         * @private
+         */
+        redraw: function (html, option) {
+            var self = this;
+
+            self.undelegateEvents();
+            FixElement.prototype.redraw.apply(this, [html, option]);
+            self.delegatesEvents();
+        },
+        /**
+         * 生成初始化点击事件
+         * @private
+         */
+        delegatesEvents: function () {
+            var self = this;
+
+            $(self._element).delegate("li.mod-dropdown-item", "click.dropdown", function (e) {
+                var key = $(this).data("key"),
+                    value = $(this).data("value"),
+                    ev;
+
+                if (self.activedItem) {
+                    self.activedItem.removeClass("mod-dropdown-item-active");
+                }
+
+                self.activedItem = $(this).addClass("mod-dropdown-item-active");
+
+                ev = $.Event("selectitem", {key: key, value: value, element: this, index: $.inArray(this, $(self._element).find("li.mod-dropdown-item"))});
+
+                /**
+                 * 点击选项时触发的事件
+                 * @event module:jsmod/ui/fixElement/dropDown#selectitem
+                 * @type {object}
+                 * @property {string} key     DropItem 中的 key 值
+                 * @property {string} value   DropItem 中的 value 值
+                 * @property {string} index   DropItem 的索引
+                 * @property {dom}    element 当前选项的 dom 对象
+                 */
+                $(self).trigger(ev, [{key: key, value: value, element: this, index: $.inArray(this, $(self._element).find("li.mod-dropdown-item"))}]);
+
+                if (ev.isDefaultPrevented()) {
+                    e.preventDefault();
+                }
+
+                if (!ev.preventDropDownHide) {
+                    self.hide();
+                }
+            });
+
+            // 这个也要清除
+            if (self.target &amp;&amp; $(self.target).prop("nodeName") == "INPUT") {
+                $(self.target).on("keydown.dropdown", function (e) {
+                    var cur, ev, key, value;
+
+                    if (self._isHide) {
+                        if ((e.keyCode == 38 || e.keyCode == 40) &amp;&amp; self.option.keyPressShow) {
+                            self.show();
+                        }
+                        // 这个地方的 return 修复过两次，最后判断加入 return 原因是如果在隐藏时按上下键位
+                        // 会改变 input 值
+                        return;
+                    }
+
+                    // 向上一位
+                    if (e.keyCode == 38) {
+                        self.move("up");
+                        e.preventDefault();
+                    }
+                    // 向下一位
+                    if (e.keyCode == 40) {
+                        self.move("down");
+                        e.preventDefault();
+                    }
+
+                    // 确定
+                    if (e.keyCode == 13) {
+                        cur = self._element.find(".mod-dropdown-item-cur");
+
+                        if (cur.length > 0) {
+                            if (self.activedItem) {
+                                self.activedItem.removeClass("mod-dropdown-item-active");
+                            }
+
+                            key = $(cur).data("key"),
+                            value = $(cur).data("value"),
+                            self.activedItem = $(cur).addClass("mod-dropdown-item-active");
+
+                            ev = $.Event("selectitem", {key: key, value: value, element: cur.get(0)});
+
+                            $(self).trigger(ev, [{key: key, value: value, element: cur.get(0)}]);
+
+                            if (ev.isDefaultPrevented()) {
+                                e.preventDefault();
+                            }
+
+                            if (!ev.preventDropDownHide) {
+                                self.hide();
+                            }
+                        }
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            if (main.ie6) {
+                $(self._element).delegate("li.mod-dropdown-item", "mouseenter.dropdown", function () {
+                    $(this).addClass("mod-dropdown-item-hover");
+                });
+
+                $(self._element).delegate("li.mod-dropdown-item", "mouseleave.dropdown", function () {
+                    $(this).removeClass("mod-dropdown-item-hover");
+                });
+            }
+        },
+        /**
+         * 选中的移动
+         * @private
+         * @param {string} flag
+         */
+        move: function (flag) {
+            var self = this,
+                element = self._element,
+                cur, index, total, lis, toIndex, toCur;
+
+            if (self.items.length == 0) {
+                return;
+            }
+
+            lis = $(element).find("li");
+            total = lis.length;
+            cur = $(element).find(".mod-dropdown-item-cur");
+            index = $.inArray(cur.get(0), lis);
+
+            if (index != -1) {
+                if (flag == "up") {
+                    toIndex = index - 1 &lt; 0 ? total - 1 : index - 1;
+                }
+                if (flag == "down") {
+                    toIndex = index + 1 >= total ? 0 : index + 1;
+                }
+            } else {
+                toIndex = flag == "up" ? total - 1 : 0;
+            }
+
+            toCur = lis.eq(toIndex);
+
+            if (cur.length > 0) {
+                cur.removeClass("mod-dropdown-item-cur");
+            }
+
+            toCur.addClass("mod-dropdown-item-cur");
+            /**
+             * 鼠标用上下键切换到某个选项
+             * @event module:jsmod/ui/fixElement/dropDown#moveto
+             * @property {string} key   设置的key
+             * @property {string} value 设置的value
+             * @property {dom}    toCur 当前聚焦的选项
+             */
+            $(self).trigger("moveto", [{key: toCur.data("key"), value: toCur.data("value"), toCur: toCur}]);
+
+            if (self.option.syncInput) {
+                $(self.target).val(toCur.data("value"));
+            }
+        },
+        /**
+         * 清除事件
+         * @private
+         */
+        undelegateEvents: function () {
+            var self = this;
+
+            if (self._element) {
+                $(self._element).undelegate("li.mod-dropdown-item", "click.dropdown");
+
+                if (main.ie6) {
+                    self._element.undelegate("li.mod-dropdown-item", "mouseenter.dropdown");
+                    self._element.undelegate("li.mod-dropdown-item", "mouseleave.dropdown");
+                }
+            }
+
+            $(self.target).off("keydown.dropdown");
+        },
+        /**
+         * 删除元素，释放事件
+         * @public
+         */
+        destroy: function () {
+            this.undelegateEvents();
+            FixElement.prototype.destroy.call(this);
+        }
+    });
+
+    module.exports = DropDown;
+});</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="module-jsmod_ui_carousel.html">jsmod/ui/carousel</a></li><li><a href="module-jsmod_ui_dialog.html">jsmod/ui/dialog</a></li><li><a href="module-jsmod_ui_fixElement.html">jsmod/ui/fixElement</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html">jsmod/ui/fixElement/dropDown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html">jsmod/ui/fixElement/dropDown/select</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html">jsmod/ui/fixElement/dropDown/suggestion</a></li><li><a href="module-jsmod_ui_fixElement_tip.html">jsmod/ui/fixElement/tip</a></li><li><a href="module-jsmod_ui_pagination.html">jsmod/ui/pagination</a></li><li><a href="module-jsmod_ui_scrollbar.html">jsmod/ui/scrollbar</a></li><li><a href="module-jsmod_ui_tab.html">jsmod/ui/tab</a></li><li><a href="module-jsmod_ui_treeView.html">jsmod/ui/treeView</a></li></ul><h3>Events</h3><ul><li><a href="module-jsmod_ui_carousel.html#event:active">active</a></li><li><a href="module-jsmod_ui_dialog.html#event:pressesc">pressesc</a></li><li><a href="module-jsmod_ui_fixElement.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:moveto">moveto</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:selectitem">selectitem</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:moveto">moveto</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:selectitem">selectitem</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:moveto">moveto</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:selectitem">selectitem</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:hidetimer">hidetimer</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:showtimer">showtimer</a></li><li><a href="module-jsmod_ui_pagination.html#event:page">page</a></li><li><a href="module-jsmod_ui_tab.html#event:tab">tab</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha10</a> on Fri Jun 26 2015 13:59:55 GMT+0800 (中国标准时间)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

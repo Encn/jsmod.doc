@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: fixElement/dropDown/suggestion.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: fixElement/dropDown/suggestion.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * suggestion 提供ajax调用远程数据返回结果，并自动调用下拉框
+ * @module jsmod/ui/fixElement/dropDown/suggestion
+ */
+define("jsmod/ui/fixElement/dropDown/suggestion", function (require, exports, module) {
+    /**
+     * JSONP 请求时的配置项
+     * @typedef {object} JSONPOption
+     * @property {string} jsonp         在一个jsonp请求中重写回调函数的名字。
+     * @property {string} jsonpCallback 为jsonp请求指定一个回调函数名。
+     */
+
+    var DropDown, _option;
+
+    DropDown = require("jsmod/ui/fixElement/dropDown");
+
+    _option = {
+        targetType: "bottom",
+        noInput: "",
+        keyPressShow: false,
+        syncInput: true,
+        blurHide: true
+    };
+
+    /**
+     * 使用时最好使用json请求，jsonp需要保证支持标准回调函数，不然需要在实例中重写getData方法
+     * @extends module:jsmod/ui/fixElement/dropDown
+     * @constructor
+     * @alias module:jsmod/ui/fixElement/dropDown/suggestion
+     * @param {object}           option
+     * @param {(string|function)}option.url                  请求数据的地址。如果是函数时会将target中输入作为参数传递；会用返回的数据作为ajax的地址
+     * @param {(dom|selector)}   option.target               定位到这个元素附近，此target必须为可输入的input
+     * @param {function}         option.fun                  会将index, item作为参数传递。返回数据结构为 {@link DropItem}
+     * @param {function}         option.sendData             会将target中输入作为参数传递。会用返回的数据作为ajax的数据
+     * @param {function}         option.handleData           会将异步返回数据作为参数传递。需要返回数组作为渲染数据
+     * @param {JSONPOption}      option.jsonpOption          如果请求是jsonp时的配置
+     * @param {(string|function)}[option.noInput]            当没有输入时下拉框显示的内容
+     * @param {string}           [option.className]          添加自定义的className
+     * @param {string}           [option.targetType=bottom]  定位方式 - center | top | bottom | right | left
+     * @param {int}              [option.zIndex=1000]        固定元素的z-index
+     * @param {Coords}           [option.offset]             定位时的偏移 - @see {@link Coords}
+     * @param {bool}             [option.preventShow=true]   是否阻止初始化时显示元素
+     * @param {bool}             [option.syncInput=true]     当target为input时，按上下键选中时是否同步填充
+     * @param {bool}             [option.blurHide=true]      触发blur事件时是否隐藏
+     */
+    var Suggestion = function (option) {
+        var self = this,
+            option;
+
+        self.option = option = $.extend({}, _option, option);
+        self.cacheDfds = {};
+        
+        DropDown.apply(self, [[], option]);
+        option.noInput &amp;&amp; $(self._element).html(option.noInput);
+
+        self.initKeyPress();
+        self.initFocus();
+    }
+
+    $.extend(Suggestion.prototype, {}, DropDown.prototype);
+    Suggestion.prototype.constructor = Suggestion;
+
+    $.extend(Suggestion.prototype, 
+        /** @lends module:jsmod/ui/fixElement/dropDown/suggestion.prototype */
+        {
+            /**
+             * focus, blur时的变化
+             * @private
+             */
+            initFocus: function () {
+                var self = this,
+                    option = self.option;
+
+                if (option.noInput) {
+                    $(self.target).focus(function () {
+                        if ($(this).val() == "") {
+                            self.resetItems([]);
+                            self._element.html(option.noInput);
+                            self.show();
+                        }
+                    });
+                }
+
+                $(self.target).blur(function () {
+                    if (option.blurHide) {
+                        setTimeout(function () {
+                            self.hide();
+                        }, 200);
+                    }
+                });
+            },
+            /**
+             * 初始化内容变更
+             * @private
+             */
+            initKeyPress: function () {
+                var self = this,
+                    option = self.option;
+
+                $(self.target).on("keyup.suggestion", function (e) {
+                    var val = $(this).val();
+
+                    if (e.keyCode == 13) {
+                        return;
+                    }
+
+                    if (e.keyCode == 38 || e.keyCode == 40 &amp;&amp; !self._isHide) {
+                        return;
+                    }
+
+                    val = $.trim(val);
+
+                    if (val == "") {
+                        self.resetItems([]);
+                        option.noInput &amp;&amp; $(self._element).html(option.noInput);
+                        self.show();
+                    } else {
+                        self.getData(val);
+                    }
+
+                    self.lastVal = val;
+                });
+            },
+            /**
+             * 获取数据
+             * @param {string} val 输入框中的数据
+             */
+            getData: function (val) {
+                var self = this,
+                    option = self.option,
+                    dfd, sendData, url;
+                
+                sendData = option.sendData &amp;&amp; option.sendData(val);
+
+                dfd = self.cacheDfds[$.param(sendData)];
+
+                if (!dfd) {
+                    url = $.isFunction(option.url) ? option.url(val) : option.url;
+
+                    dfd = $.ajax({
+                        url: url,
+                        data: sendData,
+                        dataType: option.jsonpOption ? "jsonp" : "json",
+                        jsonp: option.jsonpOption &amp;&amp; option.jsonpOption.jsonp ? option.jsonpOption.jsonp : undefined,
+                        jsonpCallback: option.jsonpOption &amp;&amp; option.jsonpOption.jsonpCallback ? option.jsonpOption.jsonpCallback : undefined
+                    }).promise();
+
+                    self.cacheDfds[$.param(sendData)] = dfd;
+                }
+
+                dfd.done(function (json) {
+                    data = option.handleData(json);
+
+                    if (data) {
+                        self.showDropDown(data);
+                    }
+                });
+            },
+            /**
+             * 显示下拉
+             * @private
+             * @param {array} items 处理后的数组数据
+             */
+            showDropDown: function (items) {
+                var self = this;
+
+                self.resetItems(items);
+                self.show();
+            }
+        }
+    );
+
+    module.exports = Suggestion;
+});</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="module-jsmod_ui_carousel.html">jsmod/ui/carousel</a></li><li><a href="module-jsmod_ui_dialog.html">jsmod/ui/dialog</a></li><li><a href="module-jsmod_ui_fixElement.html">jsmod/ui/fixElement</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html">jsmod/ui/fixElement/dropDown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html">jsmod/ui/fixElement/dropDown/select</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html">jsmod/ui/fixElement/dropDown/suggestion</a></li><li><a href="module-jsmod_ui_fixElement_tip.html">jsmod/ui/fixElement/tip</a></li><li><a href="module-jsmod_ui_pagination.html">jsmod/ui/pagination</a></li><li><a href="module-jsmod_ui_scrollbar.html">jsmod/ui/scrollbar</a></li><li><a href="module-jsmod_ui_tab.html">jsmod/ui/tab</a></li><li><a href="module-jsmod_ui_treeView.html">jsmod/ui/treeView</a></li></ul><h3>Events</h3><ul><li><a href="module-jsmod_ui_carousel.html#event:active">active</a></li><li><a href="module-jsmod_ui_dialog.html#event:pressesc">pressesc</a></li><li><a href="module-jsmod_ui_fixElement.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:moveto">moveto</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:selectitem">selectitem</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:moveto">moveto</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:selectitem">selectitem</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:moveto">moveto</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:selectitem">selectitem</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:hidetimer">hidetimer</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:showtimer">showtimer</a></li><li><a href="module-jsmod_ui_pagination.html#event:page">page</a></li><li><a href="module-jsmod_ui_tab.html#event:tab">tab</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha10</a> on Fri Jun 26 2015 13:59:55 GMT+0800 (中国标准时间)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

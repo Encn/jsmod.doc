@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: fixElement.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: fixElement.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * 固定位置元素模块
+ * @module jsmod/ui/fixElement
+ */
+define("jsmod/ui/fixElement", function(require, exports, module) {
+    /**
+     * 包含top、left的坐标字段
+     * @typedef  {object} Coords
+     * @property {int}    top     top
+     * @property {int}    left    left
+     */
+
+    var _option, main;
+
+    main = require("jsmod/main");
+
+    _option = {
+        targetType: "top",
+        zIndex: 1000,
+        fixed: false,
+        preventResize: false,
+        appendInBody: false
+    };
+
+    /**
+     * 绝对定位元素为 jsmod 大多数 ui 控件基类；同时也可被外部直接使用或继承使用。
+     * 其提供了将 dom 元素（html片段）定位到页面特定位置（坐标，元素附近）的基础支持
+     * 
+     * @constructor
+     * @alias module:jsmod/ui/fixElement
+     * @param {(string|dom|selector)} element                        需要定位的元素，可以是 html, dom, 选择器
+     * @param {object}                option                         配置参数
+     * @param {(dom|selector)}        [option.target]                定位到这个元素附近 (取选择器中获取的第一个元素作为定位元素)
+     * @param {string}                [option.targetType]            用 "," 分割可传入一至三个值，每个值都可选 top, right, bottom, left, center
+     * @param {Coords}                [option.offset]                定位时的偏移
+     * @param {Coords}                [option.position]              没有 target 参数时, 采取绝对定位方式时传入的坐标
+     * @param {bool}                  [option.fixed=false]           是否使用 fixed 定位, 仅当采用坐标定位时可用, ie6 会自动加入 hack 支持 fix 定位
+     * @param {int}                   [option.zIndex=1000]           元素的 z-index
+     * @param {bool}                  [option.preventShow=false]     是否阻止初始化时显示元素
+     * @param {bool}                  [option.preventResize=false]   是否阻止resize时重定位元素
+     * @param {bool}                  [option.appendInBody=false]    如果 target 的父元素设置 overflow:hidden 且 relative, absolute 定位时，元素会被隐藏，设置此值为 true 元素将成为 body 的子元素
+     * @example
+     * var FixElement = require("jsmod/ui/fixElement"), fixEl;
+     *
+     * // 创建实例 (绝对定位)
+     * new FixElement('&lt;div class="module">Hello World!&lt;/div>', {
+     *     position: {left: 100, top: 200}
+     * });
+     * 
+     * // 创建实例 (元素附近)
+     * new FixElement('&lt;div class="module">Hello World!&lt;/div>', {
+     *     target: "#create-target"
+     * });
+     */
+    var FixElement = function(element, option) {
+        var self = this;
+
+        // 准备数据
+        self._isHide = false;
+        self._element = $(element);
+        self.option = $.extend({}, _option, option);
+        if (self.option.target) {
+            self.target = $(self.option.target);
+            self.$target = $(self.option.target);
+        }
+
+        // 设置index
+        self._element.css("z-Index", self.option.zIndex);
+
+        // 绘制、主要处理定位逻辑
+        self.redraw();
+
+        // 显示或是隐藏
+        option.preventShow ? self.hide() : self.show();
+
+        // 注册屏幕变化的 redraw
+        if (!option.preventResize) {
+            self.resizeCb = function () {
+                if (!self.resizing) {
+                    self.redrawTimer = setTimeout(function () {
+                        self.redraw();
+                        self.resizing = false;
+                    }, 0);
+                }
+
+                self.resizing = true;
+            }
+
+            $(window).on("resize.fixElement", self.resizeCb);
+        }
+    }
+
+    $.extend(FixElement.prototype,
+    /** @lends module:jsmod/ui/fixElement.prototype */ 
+    {
+        /**
+         * 定位到特定的位置，定位成功后会更改原有配置
+         * @public
+         * @param {Coords} position      绝对定位方式时传入的坐标 - @see {@link Coords}
+         * @param {bool}   [fixed=false] 是否使用 fixed 定位
+         * @param {Coords} [offset]      定位时的偏移
+         * @example
+         * instance.fix({left: 10, top: 20}, true, {left: 2, top: 5});
+         */
+        fix: function(position, fixed, offset) {
+            var self = this,
+                element = self._element;
+
+            $.extend(self.option, {
+                fixed: fixed,
+                offset: $.extend({}, offset),
+                position: $.extend({}, position)
+            });
+
+            if (offset) {
+                position.top += offset.top || 0;
+                position.left += offset.left || 0;
+
+                position.bottom += offset.bottom || 0;
+                position.right += offset.right || 0;
+            }
+
+            if (element.parent("body").length == 0) {
+                element.detach().appendTo(document.body);
+            }
+
+            if (fixed &amp;&amp; !main.ie6) {
+                element.css("position", "fixed");
+                if (element.css("display") == "none") {
+                    element.show().offset(position).hide();
+                } else {
+                    element.offset(position);
+                }
+            } else {
+                element.css("position", "absolute");
+                if (main.ie6 &amp;&amp; fixed) {
+                    element.get(0).style.cssText += ";_top: expression(eval(document.documentElement.scrollTop + " + position.top + "))";
+                    element.get(0).style.cssText += ";_left: expression(eval(document.documentElement.scrollLeft + " + position.left + "))";
+                } else {
+                    element.css("position", "absolute");
+                    if (element.css("display") == "none") {
+                        element.show().offset(position).hide();
+                    } else {
+                        element.offset(position);
+                    }
+                }
+            }
+        },
+        /**
+         * 定位到指定的元素周围，定位成功后会更改原有配置
+         * @public
+         * @param {(string|dom)} target           定位到这个元素附近
+         * @param {string}       [targetType]     用 "," 分割可传入一至三个值，每个值都可选 top, right, bottom, left, center
+         * @param {Coords}       [offset]         定位时的偏移
+         * @example
+         * instance.fixTo("#to-fix-element", "bottom", {left: 5, top: 5});
+         */
+        fixTo: function (target, targetType, offset) {
+            var self = this,
+                element = self._element,
+                bounds, rect, position, targetTypeArr, horizontalFun, verticalFun;
+
+            /** 
+             * 第一个对齐参数为 top bottom 
+             * @inner
+             * @param {object} pos     位置
+             * @param {string} type    第二个定位参数
+             * @param {string} [typeT] 第三个定位参数
+             */
+            horizontalFun = function (pos, type, typeT) {
+                if (type === undefined || type == "left" || type == "right" || type == "center") {
+                    if (type == "left") {
+                        pos.left -= bounds.width / 2;
+                    }
+
+                    if (type == "right") {
+                        pos.left += bounds.width / 2;
+                    } 
+                } else {
+                    throw new RangeError("second targetType error");
+                }
+
+                // 第三个定位参数
+                if (typeT === undefined || typeT == "left" || typeT == "right" || typeT == "center") {
+                    if (typeT == "left") {
+                        pos.left -= rect.width / 2;
+                    }
+
+                    if (typeT == "right") {
+                        pos.left += rect.width / 2;
+                    }
+                } else {
+                    throw new RangeError("third targetType error");
+                }
+
+                return pos;
+            }
+
+            /** 
+             * 第一个对齐参数为 left、right 
+             * @inner
+             * @param {object} pos     位置
+             * @param {string} type    第二个定位参数
+             * @param {string} [typeT] 第三个定位参数
+             */
+            verticalFun = function (pos, type, typeT) {
+                if (type === undefined || type == "bottom" || type == "top" || type == "center") {
+                    if (type == "bottom") {
+                        pos.top += bounds.height / 2;
+                    }
+
+                    if (type == "top") {
+                        pos.top -= bounds.height / 2;
+                    } 
+                } else {
+                    throw new RangeError("second targetType error");
+                }
+
+                // 第三个定位参数
+                if (typeT === undefined || typeT == "bottom" || typeT == "top" || typeT == "center") {
+                    if (typeT == "bottom") {
+                        pos.top += rect.height / 2;
+                    }
+
+                    if (typeT == "top") {
+                        pos.top -= rect.height / 2;
+                    }
+                } else {
+                    throw new RangeError("third targetType error");
+                }
+
+                return pos;
+            }
+
+            $.extend(self.option, {
+                target: target,
+                targetType: targetType,
+                offset: $.extend({}, offset)
+            });
+
+            if (self.option.target) {
+                self.target = $(target);
+                self.$target = $(self.option.target);   
+            }
+
+            targetType = targetType || self.option.targetType;
+
+            // 将字符串转化为数组
+            targetTypeArr = targetType.split(",");
+            targetTypeArr = $.map(targetTypeArr, function (value) {
+                return $.trim(value);
+            });
+
+            if (self.option.appendInBody) {
+                element.css("position", "absolute").detach().appendTo(document.body);
+            } else {
+                element.css("position", "absolute").detach().insertAfter($(target).parent());
+            }
+
+            bounds = self.getBounds(target);
+            rect = self.getRect(element);
+
+            switch (targetTypeArr[0]) {
+                case "top": 
+                    position = {top: bounds.top - rect.height, left: bounds.left + bounds.width /2 - rect.width / 2}
+                    horizontalFun(position, targetTypeArr[1], targetTypeArr[2]);
+                    break;
+                case "right":
+                    position = {top: bounds.top + bounds.height / 2 - rect.height / 2, left: bounds.left + bounds.width}
+                    verticalFun(position, targetTypeArr[1], targetTypeArr[2]);
+                    break;
+                case "bottom":
+                    position = {top: bounds.top + bounds.height, left: bounds.left + bounds.width /2 - rect.width / 2}
+                    horizontalFun(position, targetTypeArr[1], targetTypeArr[2]);
+                    break;
+                case "left":
+                    position = {top: bounds.top + bounds.height / 2 - rect.height / 2, left: bounds.left - rect.width}
+                    verticalFun(position, targetTypeArr[1], targetTypeArr[2]);
+                    break;
+                case "center":
+                    position = {top: bounds.top + bounds.height / 2 - rect.height / 2, left: bounds.left + bounds.width /2 - rect.width / 2}
+                    break;
+            }
+
+            if (offset) {
+                position.top += offset.top || 0;
+                position.left += offset.left || 0;
+            }
+
+            if (element.css("display") == "none") {
+                element.show().offset(position).hide();
+            } else {
+                element.offset(position);
+            }
+        },
+        /**
+         * 获取指定元素的实际宽高
+         * @private
+         * @param {(string|dom)} el 指定的元素
+         */
+        getRect: function(el) {
+            return {
+                width: $(el).outerWidth(), 
+                height: $(el).outerHeight()
+            };
+        },
+        /**
+         * @private
+         * @description 获取一个元素的实际宽高、和定位 
+         * @param {string | dom} el 指定的元素
+         */
+        getBounds: function(el) {
+            return $.extend({}, this.getRect(el), $(el).offset());
+        },
+        /**
+         * 绘制当前实例，可以用于重定位
+         * @public
+         * @param {string} [html]   如果传入了html则会重新设置element对象，不传入则只进行重定位
+         */
+        redraw: function(html) {
+            var self = this,
+                option = self.option,
+                optionR = optionR || {};
+
+            if (html) {
+                self._element.remove();
+                self._element = $(html);
+                self._element.css("z-Index", self.option.zIndex);
+            }
+            
+            // 保持当前的开关状态
+            self._isHide ? self._element.hide() : self._element.show();
+
+            if (option.target) {
+                self.fixTo(option.target, option.targetType, option.offset);
+                return;
+            }
+
+            if (option.position) {
+                self.fix(option.position, option.fixed, option.offset);
+                return;
+            }
+        },
+        /**
+         * 显示element元素，重写此方法，可以实现显示的不同效果
+         * @public
+         * @fires jsmod/ui/fixElement#shown
+         * @param {object} option              配置参数
+         * @param {bool}   [option.fade=false] 是否启用 fade 效果
+         */
+        show: function(optionR) {
+            var self = this,
+                option = self.option,
+                optionR = optionR || {},
+                evt;
+
+            if (option.target) {
+                self.fixTo(option.target, option.targetType, option.offset);
+            }
+
+            if (option.position) {
+                self.fix(option.position, option.fixed, option.offset);
+            }
+
+            if (optionR.fade) {
+                this._element.hide().fadeIn("fast");
+            } else {
+                this._element.show();  
+            }
+
+            this._isHide = false;
+
+            /**
+             * 显示时触发
+             * @event module:jsmod/ui/fixElement#shown
+             * @type {object}
+             */
+            evt = $.Event("shown");
+            $(this).trigger(evt);
+        },
+        /**
+         * 隐藏element元素，重写此方法，可以实现不同的效果
+         * @public
+         * @fires jsmod/ui/fixElement#hidden
+         * @param {object} option              配置参数
+         * @param {bool}   [option.fade=false] 是否启用 fade 效果
+         */
+        hide: function(optionR) {
+            var evt,
+                optionR = optionR || {};
+            
+            if (optionR.fade) {
+                this._element.fadeOut("fast");
+            } else {
+                this._element.hide();    
+            }
+
+            this._isHide = true;
+
+            /**
+             * 隐藏时触发
+             * @event module:jsmod/ui/fixElement#hidden
+             * @type {object}
+             */
+            evt = $.Event("hidden");
+            $(this).trigger(evt);
+        },
+        /**
+         * 调用show、或hide方法
+         * @public
+         * @param {object} option              配置参数
+         * @param {bool}   [option.fade=false] 是否启用 fade 效果
+         */
+        toggle: function(option) {
+            this._isHide ? this.show(option) : this.hide(option);
+        },
+        /**
+         * 移除元素、事件、释放内存
+         * @public
+         */
+        destroy: function() {
+            this._element.remove();
+            this._element = null;
+            
+            if (!this.option.preventResize &amp;&amp; this.resizeCb) {
+                $(window).off("resize.fixElement", this.resizeCb);
+                this.redrawTimer &amp;&amp; clearTimeout(this.redrawTimer);
+            }
+        },
+        /**
+         * 获取产生的dom对象，可以对其进行事件添加等操作
+         * @public
+         */
+        getElement: function () {
+            return this._element;
+        },
+        /**
+         * 获取当前 FixElement 的显示状态
+         * @return {bool} display true 为显示 false 为隐藏
+         */
+        getDisplay: function () {
+            return !this._isHide;
+        }
+    });
+
+    module.exports = FixElement;
+});</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="module-jsmod_ui_carousel.html">jsmod/ui/carousel</a></li><li><a href="module-jsmod_ui_dialog.html">jsmod/ui/dialog</a></li><li><a href="module-jsmod_ui_fixElement.html">jsmod/ui/fixElement</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html">jsmod/ui/fixElement/dropDown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html">jsmod/ui/fixElement/dropDown/select</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html">jsmod/ui/fixElement/dropDown/suggestion</a></li><li><a href="module-jsmod_ui_fixElement_tip.html">jsmod/ui/fixElement/tip</a></li><li><a href="module-jsmod_ui_pagination.html">jsmod/ui/pagination</a></li><li><a href="module-jsmod_ui_scrollbar.html">jsmod/ui/scrollbar</a></li><li><a href="module-jsmod_ui_tab.html">jsmod/ui/tab</a></li><li><a href="module-jsmod_ui_treeView.html">jsmod/ui/treeView</a></li></ul><h3>Events</h3><ul><li><a href="module-jsmod_ui_carousel.html#event:active">active</a></li><li><a href="module-jsmod_ui_dialog.html#event:pressesc">pressesc</a></li><li><a href="module-jsmod_ui_fixElement.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:moveto">moveto</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:selectitem">selectitem</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:moveto">moveto</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:selectitem">selectitem</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:moveto">moveto</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:selectitem">selectitem</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:hidetimer">hidetimer</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:showtimer">showtimer</a></li><li><a href="module-jsmod_ui_pagination.html#event:page">page</a></li><li><a href="module-jsmod_ui_tab.html#event:tab">tab</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha10</a> on Fri Jun 26 2015 13:59:55 GMT+0800 (中国标准时间)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

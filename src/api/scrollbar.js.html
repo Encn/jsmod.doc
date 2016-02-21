@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: scrollbar.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: scrollbar.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/*! Copyright (c) 2013 Brandon Aaron (http://brandon.aaron.sh)
+ * Licensed under the MIT License (LICENSE.txt).
+ *
+ * Version: 3.1.9
+ *
+ * Requires: jQuery 1.2.2+
+ */
+
+(function ($) {
+
+    var toFix  = ['wheel', 'mousewheel', 'DOMMouseScroll', 'MozMousePixelScroll'],
+        toBind = ( 'onwheel' in document || document.documentMode >= 9 ) ?
+                    ['wheel'] : ['mousewheel', 'DomMouseScroll', 'MozMousePixelScroll'],
+        slice  = Array.prototype.slice,
+        nullLowestDeltaTimeout, lowestDelta;
+
+    if ( $.event.fixHooks ) {
+        for ( var i = toFix.length; i; ) {
+            $.event.fixHooks[ toFix[--i] ] = $.event.mouseHooks;
+        }
+    }
+
+    var special = $.event.special.mousewheel = {
+        version: '3.1.9',
+
+        setup: function() {
+            if ( this.addEventListener ) {
+                for ( var i = toBind.length; i; ) {
+                    this.addEventListener( toBind[--i], handler, false );
+                }
+            } else {
+                this.onmousewheel = handler;
+            }
+            // Store the line height and page height for this particular element
+            $.data(this, 'mousewheel-line-height', special.getLineHeight(this));
+            $.data(this, 'mousewheel-page-height', special.getPageHeight(this));
+        },
+
+        teardown: function() {
+            if ( this.removeEventListener ) {
+                for ( var i = toBind.length; i; ) {
+                    this.removeEventListener( toBind[--i], handler, false );
+                }
+            } else {
+                this.onmousewheel = null;
+            }
+        },
+
+        getLineHeight: function(elem) {
+            return parseInt($(elem)['offsetParent' in $.fn ? 'offsetParent' : 'parent']().css('fontSize'), 10);
+        },
+
+        getPageHeight: function(elem) {
+            return $(elem).height();
+        },
+
+        settings: {
+            adjustOldDeltas: true
+        }
+    };
+
+    $.fn.extend({
+        mousewheel: function(fn) {
+            return fn ? this.bind('mousewheel', fn) : this.trigger('mousewheel');
+        },
+
+        unmousewheel: function(fn) {
+            return this.unbind('mousewheel', fn);
+        }
+    });
+
+
+    function handler(event) {
+        var orgEvent   = event || window.event,
+            args       = slice.call(arguments, 1),
+            delta      = 0,
+            deltaX     = 0,
+            deltaY     = 0,
+            absDelta   = 0;
+        event = $.event.fix(orgEvent);
+        event.type = 'mousewheel';
+
+        // Old school scrollwheel delta
+        if ( 'detail'      in orgEvent ) { deltaY = orgEvent.detail * -1;      }
+        if ( 'wheelDelta'  in orgEvent ) { deltaY = orgEvent.wheelDelta;       }
+        if ( 'wheelDeltaY' in orgEvent ) { deltaY = orgEvent.wheelDeltaY;      }
+        if ( 'wheelDeltaX' in orgEvent ) { deltaX = orgEvent.wheelDeltaX * -1; }
+
+        // Firefox &lt; 17 horizontal scrolling related to DOMMouseScroll event
+        if ( 'axis' in orgEvent &amp;&amp; orgEvent.axis === orgEvent.HORIZONTAL_AXIS ) {
+            deltaX = deltaY * -1;
+            deltaY = 0;
+        }
+
+        // Set delta to be deltaY or deltaX if deltaY is 0 for backwards compatabilitiy
+        delta = deltaY === 0 ? deltaX : deltaY;
+
+        // New school wheel delta (wheel event)
+        if ( 'deltaY' in orgEvent ) {
+            deltaY = orgEvent.deltaY * -1;
+            delta  = deltaY;
+        }
+        if ( 'deltaX' in orgEvent ) {
+            deltaX = orgEvent.deltaX;
+            if ( deltaY === 0 ) { delta  = deltaX * -1; }
+        }
+
+        // No change actually happened, no reason to go any further
+        if ( deltaY === 0 &amp;&amp; deltaX === 0 ) { return; }
+
+        // Need to convert lines and pages to pixels if we aren't already in pixels
+        // There are three delta modes:
+        //   * deltaMode 0 is by pixels, nothing to do
+        //   * deltaMode 1 is by lines
+        //   * deltaMode 2 is by pages
+        if ( orgEvent.deltaMode === 1 ) {
+            var lineHeight = $.data(this, 'mousewheel-line-height');
+            delta  *= lineHeight;
+            deltaY *= lineHeight;
+            deltaX *= lineHeight;
+        } else if ( orgEvent.deltaMode === 2 ) {
+            var pageHeight = $.data(this, 'mousewheel-page-height');
+            delta  *= pageHeight;
+            deltaY *= pageHeight;
+            deltaX *= pageHeight;
+        }
+
+        // Store lowest absolute delta to normalize the delta values
+        absDelta = Math.max( Math.abs(deltaY), Math.abs(deltaX) );
+
+        if ( !lowestDelta || absDelta &lt; lowestDelta ) {
+            lowestDelta = absDelta;
+
+            // Adjust older deltas if necessary
+            if ( shouldAdjustOldDeltas(orgEvent, absDelta) ) {
+                lowestDelta /= 40;
+            }
+        }
+
+        // Adjust older deltas if necessary
+        if ( shouldAdjustOldDeltas(orgEvent, absDelta) ) {
+            // Divide all the things by 40!
+            delta  /= 40;
+            deltaX /= 40;
+            deltaY /= 40;
+        }
+
+        // Get a whole, normalized value for the deltas
+        delta  = Math[ delta  >= 1 ? 'floor' : 'ceil' ](delta  / lowestDelta);
+        deltaX = Math[ deltaX >= 1 ? 'floor' : 'ceil' ](deltaX / lowestDelta);
+        deltaY = Math[ deltaY >= 1 ? 'floor' : 'ceil' ](deltaY / lowestDelta);
+
+        // Add information to the event object
+        event.deltaX = deltaX;
+        event.deltaY = deltaY;
+        event.deltaFactor = lowestDelta;
+        // Go ahead and set deltaMode to 0 since we converted to pixels
+        // Although this is a little odd since we overwrite the deltaX/Y
+        // properties with normalized deltas.
+        event.deltaMode = 0;
+
+        // Add event and delta to the front of the arguments
+        args.unshift(event, delta, deltaX, deltaY);
+
+        // Clearout lowestDelta after sometime to better
+        // handle multiple device types that give different
+        // a different lowestDelta
+        // Ex: trackpad = 3 and mouse wheel = 120
+        if (nullLowestDeltaTimeout) { clearTimeout(nullLowestDeltaTimeout); }
+        nullLowestDeltaTimeout = setTimeout(nullLowestDelta, 200);
+
+        return ($.event.dispatch || $.event.handle).apply(this, args);
+    }
+
+    function nullLowestDelta() {
+        lowestDelta = null;
+    }
+
+    function shouldAdjustOldDeltas(orgEvent, absDelta) {
+        // If this is an older event and the delta is divisable by 120,
+        // then we are assuming that the browser is treating this as an
+        // older mouse wheel event and that we should divide the deltas
+        // by 40 to try and get a more usable deltaFactor.
+        // Side note, this actually impacts the reported scroll distance
+        // in older browsers and can cause scrolling to be slower than native.
+        // Turn this off by setting $.event.special.mousewheel.settings.adjustOldDeltas to false.
+        return special.settings.adjustOldDeltas &amp;&amp; orgEvent.type === 'mousewheel' &amp;&amp; absDelta % 120 === 0;
+    }
+
+})(jQuery);
+
+/**
+ * @module jsmod/ui/scrollbar
+ */
+define("jsmod/ui/scrollbar", function (require, exports, module) {
+    var _option, main;
+
+    main = require("jsmod/main");
+
+    _option = {
+        offsetRight: 1,
+        interval: 50,
+        autoHide: false,
+        scrollbarNodeStyle: {
+            "background": "#666",
+            "border-radius": "3px",
+            "opacity": "0.8",
+            "width": "3px",
+            "border": "1px solid #444"
+        },
+        scrollbarNodeHoverStyle: {
+            "background": "#333"
+        }
+    }
+
+    /**
+     * 滚动条组件，无需改变容器的形态即可实现自定义滚动条
+     * 解决了各个浏览器滚动条不同宽度的困扰，absolute 定位，无需改变盒模型
+     * 被传入的容器必须有且只有一个子元素，不然会报错
+     * 且该子元素的定位属性会被设置为 relative
+     *
+     * @alias module:jsmod/ui/scrollbar
+     * @param {string|dom}  element 需要创建滚动条的容器
+     * @param {object}      option 配置选项
+     * @param {int}         [option.offsetRight=1]           滚动条距离右侧的位置
+     * @param {int}         [option.interval=50]             每次滚动的偏移
+     * @param {bool}        [option.autoHide=false]          是否自动隐藏滚动条
+     * @param {string}      [option.className]               自定义滚动条容器类名
+     * @param {object}      [option.scrollbarNodeStyle]      添加至滚动按钮的样式
+     * @param {object}      [option.scrollbarNodeHoverStyle] 添加至滚动按钮滚动中、hover时的样式
+     *
+     * @example
+     * // 默认滚动样式
+     * scrollbarNodeStyle: {
+     *     "background": "#666",
+     *     "border-radius": "3px",
+     *     "opacity": "0.8",
+     *     "width": 3,
+     *     "border": "1px solid #444"
+     * }
+     *
+     * // 默认滚动中 / hover 样式
+     * scrollbarNodeHoverStyle: {
+     *     "background": "#333"
+     * }
+     */
+    var Scrollbar = function (element, option) {
+        var self = this;
+
+        self.$element = $(element);
+        self.option = $.extend({}, _option, option);
+
+        if (self.$element.children().length != 1) {
+            throw new Error("container must have nur one child");
+            return;
+        }
+
+        self.$child = self.$element.children().eq(0);
+        self.init();
+    }
+
+    $.extend(Scrollbar.prototype, 
+        /**
+         * @lends module:jsmod/ui/scrollbar.prototype
+         */
+        {
+            /**
+             * 包裹容器，生成必要元素
+             * @private
+             */
+            init: function () {
+                var self = this,
+                    option = self.option;
+
+                self.$element.css("overflow", "hidden").
+                    css("position", "relative");
+
+                self.$child.css("position", "relative").css("top", 0);
+
+                self.$scrollElement = $(
+                    [
+                        '&lt;div style="cursor: pointer; top: 0; position: absolute; display: none;" class="mod-scrollbar">',
+                            '&lt;div style="position: absolute; left: 0;" class="mod-scrollbar-node">&lt;/div>',
+                        '&lt;/div>'
+                    ].join("")
+                ).css("right", option.offsetRight);
+
+                if (option.className) {
+                    self.$scrollElement.adClass(option.className);
+                }
+                
+                self.$scrollElement.appendTo(self.$element);
+
+                self.$scrollNode = self.$scrollElement.find(".mod-scrollbar-node")
+                    .css(option.scrollbarNodeStyle);
+
+                self.$scrollElement.width(self.$scrollNode.outerWidth(true));
+
+                self.resetBar();
+                self.bindEvent();
+
+                self.intervalTimer = setInterval(function () {
+                    if (self.childHeight != self.$child.outerHeight(true) || self.height != self.$element.height()) {
+                        self.resetBar();
+                    }
+                }, 500);
+            },
+            /**
+             * 判断 scrollbar 是否显示并设置 node 高度
+             * 程序内部每隔 500ms 检测一次，发生高度变化外部可以立即调用
+             *
+             * @public
+             */
+            resetBar: function (preventResize) {
+                var self = this,
+                    childHeight, innerHeight, height, to;
+
+                self.childHeight = childHeight = self.$child.outerHeight(true),
+                self.innerHeight = innerHeight = self.$element.innerHeight(),
+                self.height = height = self.$element.height();
+
+                if (childHeight > height) {
+                    self.$scrollElement.fadeIn("fast");
+
+                    if (!preventResize) {
+                        self.nodeHeight = height / childHeight * innerHeight - (self.$scrollNode.outerHeight(true) - self.$scrollNode.height());
+
+                        if (!self.$scrollNode.height()) {
+                            self.$scrollNode.height(self.nodeHeight);
+                        } else {
+                            self.$scrollNode.animate({
+                                height: self.nodeHeight
+                            }, "fast", function () {
+                                self.nodeOuterHeight = self.$scrollNode.outerHeight(true);
+                            });
+                        }
+
+                        self.nodeOuterHeight = self.nodeHeight;
+
+                        to = parseInt(self.$child.css("top").replace("px", ""));
+
+                        if (Math.abs(to) + self.height > self.childHeight) {
+                            to = -self.childHeight + self.height;
+                            self.$child.css("top", to);
+                        }
+
+                        self.$scrollElement.animate({
+                            top: Math.abs(to) / self.childHeight * self.innerHeight
+                        }, "fast");
+                    }
+                } else {
+                    self.$child.css("top", "0px");
+                    self.$scrollElement.css("top", "0px").fadeOut(300);
+                }
+            },
+            /**
+             * 传入滚动到的位置, 将所有操作组合为一个参数，具体逻辑由程序内部判断
+             *
+             * @public
+             * @param {string|int}  condition      传入的位置关键字可以是 top, bottom, 元素选择器, 位置数字
+             * @param {bool}        [animate=true] 是否启用动画
+             */
+            scroll: function (condition, animate) {
+                var self = this,
+                    to, top;
+
+                animate = animate === undefined ? true : animate;
+
+                if (condition == "top" || condition == "bottom") {
+                    if (condition == "top") {
+                        to = 0;
+                    } else {
+                        to = self.childHeight - self.height;
+                    }
+                } else if ($.isNumeric(condition)) {
+                    to = parseInt(condition);
+                } else if ($(condition).length > 0 &amp;&amp; $.contains(self.$child.get(0), $(condition).get(0))) {
+                    to = self.getTop($(condition));
+                }
+
+                if (to !== undefined) {
+                    to = to + self.height > self.childHeight ? self.childHeight - self.height : to;
+
+                    if (animate) {
+                        self.$child.animate({
+                            top: -to
+                        }, "fast");
+                        self.$scrollElement.animate({
+                            top: Math.abs(to) / self.childHeight * self.innerHeight
+                        }, "fast");
+                    } else {
+                        self.$child.css("top", -to);
+                        self.$scrollElement.css("top", Math.abs(to) / self.childHeight * self.innerHeight);
+                    }
+
+                }
+            },
+            /**
+             * 递归获取 el 相对于容器可显示范围顶部的位置
+             * @param {string|dom}  el  需要获取位置的元素，必须在容器内部
+             */
+            getTop: function (el) {
+                var self = this,
+                    fun;
+
+                fun = function (dom) {
+                    if (dom.offsetParent().get(0) != self.$child.get(0)) {
+                        return dom.position().top + fun(dom.offsetParent());
+                    } else {
+                        return dom.position().top;
+                    }
+                }
+
+                return fun(el) + parseInt(self.$element.css("paddingTop").replace("px", ""));
+            },
+            bindEvent: function () {
+                var self = this,
+                    seed;
+
+                self.seed = seed = +(new Date());
+
+                self.$element.on("mousewheel.scrollbar", function (e, delta) {
+                    var top = parseInt(self.$child.css("top").replace("px", "")),
+                        to;
+
+                    if (self.$scrollElement.css("display") != "none") {
+                        if (delta > 0) {
+                            to = top + self.option.interval > 0 ? 0 : top + self.option.interval;
+                        } else {
+                            to = top - self.option.interval &lt; -self.childHeight + self.height ? -self.childHeight + self.height : top - self.option.interval;
+                        }
+
+                        self.scroll(Math.abs(to), false);
+
+                        e.preventDefault();                        
+                    }
+                });
+
+                self.$scrollElement.on("mouseenter.scrollbar", function () {
+                    self.$scrollNode.css(self.option.scrollbarNodeHoverStyle);
+                });
+
+                self.$scrollElement.on("mouseleave.scrollbar", function () {
+                    !self.$scrollElement.data("dragging") &amp;&amp; self.$scrollNode.css(self.option.scrollbarNodeStyle);
+                });
+
+                // 控制鼠标拖拽的事件组
+                $(document).on("mousemove.scrollbar." + seed, function (e) {
+                    var top, y, to;
+
+                    if (!self.$scrollElement.data("dragging")) {
+                        return;
+                    }
+
+                    var containerStart = self.$element.offset().top + parseInt(self.$element.css("borderTopWidth").replace("px", "")),
+                        containerEnd = containerStart + self.$element.innerHeight(),
+                        y, top;
+
+                    y = e.pageY - self.$scrollElement.data("startY");
+
+                    if (y &lt;= containerStart) {
+                        top = 0;
+                    } else if (y + self.nodeOuterHeight >= containerEnd) {
+                        top = self.innerHeight - self.nodeOuterHeight;
+                    } else {
+                        top = y - containerStart;
+                    }
+
+                    to = -(top * self.childHeight / self.innerHeight);
+                    self.$child.css("top", to);
+
+                    self.$scrollElement.css("top", top);
+                    e.preventDefault();
+                });
+
+                self.$scrollElement.on("mousedown.scrollbar", function (e) {
+                    if (!self.$scrollElement.data("dragging")) {
+                        self.$scrollElement.data("startY", e.offsetY || e.originalEvent.layerY)
+                            .data("dragging", true);
+                    }
+                    e.preventDefault();
+                });
+
+                $(document).on("mouseup.scrollbar." + seed, function (e) {
+                    if (self.$scrollElement.data("dragging")) {
+                        self.$scrollElement.data("dragging", false);
+                        self.$scrollElement.trigger("mouseleave");
+                    }
+                    e.preventDefault();
+                });
+
+                if (self.option.autoHide) {
+                    self.$element.on("mouseenter.scrollbar", function () {
+                        self.hideTimer &amp;&amp; clearTimeout(self.hideTimer);
+
+                        self.resetBar(true);
+                    });
+
+                    self.$element.on("mouseleave.scrollbar", function () {
+                        self.hideTimer &amp;&amp; clearTimeout(self.hideTimer);
+
+                        self.hideTimer = setTimeout(function () {
+                            self.$scrollElement.fadeOut("fast");
+                        }, 1000);
+                    });
+                }
+            },
+            /**
+             * 移除元素和注册的事件
+             * @public
+             */
+            destroy: function () {
+                var self = this;
+
+                clearInterval(self.intervalTimer);
+
+                self.hideTimer &amp;&amp; clearTimeout(self.hideTimer);
+
+                $(document).off("mouseup.scrollbar." + self.seed);
+                $(document).off("mousemove.scrollbar." + self.seed);
+
+                self.$element.off("mouseenter.scrollbar");
+                self.$element.off("mouseleave.scrollbar");
+                self.$element.off("mousewheel.scrollbar");
+
+                self.$scrollElement.remove();
+            }
+        }
+    );
+    
+    module.exports = Scrollbar;
+});</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="module-jsmod_ui_carousel.html">jsmod/ui/carousel</a></li><li><a href="module-jsmod_ui_dialog.html">jsmod/ui/dialog</a></li><li><a href="module-jsmod_ui_fixElement.html">jsmod/ui/fixElement</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html">jsmod/ui/fixElement/dropDown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html">jsmod/ui/fixElement/dropDown/select</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html">jsmod/ui/fixElement/dropDown/suggestion</a></li><li><a href="module-jsmod_ui_fixElement_tip.html">jsmod/ui/fixElement/tip</a></li><li><a href="module-jsmod_ui_pagination.html">jsmod/ui/pagination</a></li><li><a href="module-jsmod_ui_scrollbar.html">jsmod/ui/scrollbar</a></li><li><a href="module-jsmod_ui_tab.html">jsmod/ui/tab</a></li><li><a href="module-jsmod_ui_treeView.html">jsmod/ui/treeView</a></li></ul><h3>Events</h3><ul><li><a href="module-jsmod_ui_carousel.html#event:active">active</a></li><li><a href="module-jsmod_ui_dialog.html#event:pressesc">pressesc</a></li><li><a href="module-jsmod_ui_fixElement.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:moveto">moveto</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:selectitem">selectitem</a></li><li><a href="module-jsmod_ui_fixElement_dropDown.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:moveto">moveto</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:selectitem">selectitem</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_select.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:moveto">moveto</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:selectitem">selectitem</a></li><li><a href="module-jsmod_ui_fixElement_dropDown_suggestion.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:hidden">hidden</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:hidetimer">hidetimer</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:shown">shown</a></li><li><a href="module-jsmod_ui_fixElement_tip.html#event:showtimer">showtimer</a></li><li><a href="module-jsmod_ui_pagination.html#event:page">page</a></li><li><a href="module-jsmod_ui_tab.html#event:tab">tab</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha10</a> on Fri Jun 26 2015 13:59:55 GMT+0800 (中国标准时间)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
