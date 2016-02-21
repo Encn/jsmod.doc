@@ -19,7 +19,6 @@
     "fis3-deploy-http-push": "^1.0.1",
     "fis3-hook-cmd": "^0.1.2",
     "fis3-postpackager-loader": "^1.3.5",
-    "fis3-spriter-csssprites": "^0.1.0",
     "mkdirp": "^0.5.1"
   }
 }
