@@ -1,0 +1,141 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>Pagination</title>
+        <!--inline[../../component/static.html]-->
+    </head>
+    <body>
+        <!--inline[../../component/header-example.html]-->
+        <div class="content">
+            <h1 class="title">
+                <a href="/api/pagination.html" target="_blank">API</a>
+                <a href="/test/pagination/index.html" target="_blank">Unit Test</a>
+                Pagination (分页)
+            </h1>
+
+            <div class="demo">
+                <h4>【创建】默认配置不同页数</h4>
+                <p class="desc">20页</p>
+                <div id="create1-1"></div>
+                
+                <p class="desc">1页</p>
+                <div id="create1-2"></div>
+
+                <p class="desc">10页</p>
+                <div id="create1-3"></div>
+
+                <p class="desc">1000页</p>
+                <div id="create1-4"></div>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var Pagination = require("jsmod/ui/pagination");
+
+                    new Pagination("#create1-1", {pageCount: 20});
+
+                    new Pagination("#create1-2", {pageCount: 1});
+
+                    new Pagination("#create1-3", {pageCount: 10, maxShowPage: 10});
+
+                    new Pagination("#create1-4", {pageCount: 1000});
+                })();
+            </script>
+
+
+            <div class="demo">
+                <h4>【创建】各种自定义配置</h4>
+                <p class="desc">自定义最多显示页数</p>
+                <div id="create2-1"></div>
+                
+                <p class="desc">几个特殊关键字</p>
+                <div id="create2-2"></div>
+
+                <p class="desc">页码替换字符串</p>
+                <div id="create2-3"></div>       
+
+                <p class="desc">页码替换为函数</p>
+                <div id="create2-3-2"></div>
+
+                <p class="desc">设置最初显示页码</p>
+                <div id="create2-4"></div>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var Pagination = require("jsmod/ui/pagination");
+
+                    new Pagination("#create2-1", {pageCount: 20, maxShowPage: 3});
+
+                    new Pagination("#create2-2", {pageCount: 20, textLabel: ["first", "pre", "next", "last"]});
+
+                    new Pagination("#create2-3", {pageCount: 20, pageLabel: "我是第{#0}页"});
+
+                    new Pagination("#create2-3-2", {pageCount: 20, pageLabel: function (page) {
+                        return (page + 1) * 10;
+                    }});
+
+                    new Pagination("#create2-4", {pageCount: 20, currentPage: 15});
+                })();
+            </script>
+
+            <div class="demo">
+                <h4>【修改】手动修改页数</h4>
+                <span>输入页数：</span>
+                <input type="number" id="input-page"/><a id="input-page-submit" href="javascript:void(0)">go</a>
+                <div id="create3-1"></div>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var Pagination = require("jsmod/ui/pagination"),
+                        p;
+
+                    p = new Pagination("#create3-1", {pageCount: 20, maxShowPage: 3});
+
+                    $("#input-page-submit").click(function () {
+                        var val = $("#input-page").val();
+                        p.setPage(val - 1);
+                    });
+                })();
+            </script>
+
+            <div class="demo">
+                <h4>【事件】触发的事件说明</h4>
+                
+                <p class="desc">默认初始后便会触发page事件，如果不想触发则需在实例化时加入<code>{preventInitEvent: true}</code>配置</p>
+                <div id="create4-1"></div>
+                <p id="console4-1"></p>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var Pagination = require("jsmod/ui/pagination"),
+                        p;
+
+                    p = new Pagination("#create4-1", {pageCount: 20, maxShowPage: 3});
+                    $(p).on("page", function (e) {
+                        var html = "你点击了" + (e.page + 1) + "页";
+
+                        $("#console4-1").html(html);
+                    });
+                })();
+            </script>
+            <!--inline[../../component/comment.html]-->
+        </div>
+
+        <!--inline[../../component/footer.html]-->
+    </body>
+</html>

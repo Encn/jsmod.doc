@@ -1,0 +1,157 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>carousel</title>
+        <style>
+            .mod-carousel-item {
+                margin: 10px;
+                border: 2px solid white;
+
+                _display: inline;
+                _zoom: 1;
+            }
+
+            .mod-carousel-item .image-content {
+                overflow: hidden;
+                height: 174px;
+            }
+            
+            .mod-carousel-item-cur {
+                border: 2px solid red;   
+            }
+        </style>
+        <!--inline[../../component/static.html]-->
+    </head>
+    <body>
+        <!--inline[../../component/header-example.html]-->
+
+        <div class="content">
+            <h1 class="title">
+                <a href="/api/carousel.html" target="_blank">API</a>
+                <a href="/test/carousel/index.html" target="_blank">Unit Test</a>
+                Carousel (轮播)
+            </h1>
+            
+            <div class="demo">
+                <h4>【创建】默认配置 单张</h4>
+                <p class="desc">单张的轮播实现轮训效果（既在第一张向前，最后一张向后）</p>
+                <div id="carousel-1" style="width: 300px; height: 200px; border: 1px solid black" ></div>
+                <a id="first-1" href="javascript:void(0);">first</a>
+                <a id="pre-1" href="javascript:void(0);">pre</a>
+                <a id="next-1" href="javascript:void(0);">next</a>
+                <a id="last-1" href="javascript:void(0);">last</a>
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+
+            <script>
+                (function () {
+                    var Carousel = require("jsmod/ui/carousel"),
+                        ca;
+
+                    ca = new Carousel("#carousel-1", {
+                        count: 1,
+                        htmls: [
+                            '<div class="image-content"><img data-src="' + __uri("../../static/images/banner_1_1.jpg") + '"></div>', 
+                            '<div class="image-content"><img data-src="' + __uri("../../static/images/banner_1_2.jpg") + '"></div>', 
+                            '<div class="image-content"><img data-src="' + __uri("../../static/images/banner_1_3.jpg") + '"></div>', 
+                            '<div class="image-content"><img data-src="' + __uri("../../static/images/banner_1_4.jpg") + '"></div>', 
+                            '<div class="image-content"><img data-src="' + __uri("../../static/images/banner_1_5.jpg") + '"></div>',
+                            '<div class="image-content"><img data-src="' + __uri("../../static/images/banner_1_6.jpg") + '"></div>',
+                            '<div class="image-content"><img data-src="' + __uri("../../static/images/banner_1_7.jpg") + '"></div>'
+                        ]
+                    });
+
+                    $(ca).on("active", function (e) {
+                        var img = this.getItem(e.index).find("img");
+
+                        img.prop("src", img.data("src"));
+                    });
+
+                    // 为了触发 active 事件
+                    ca.cur(0);
+
+                    $("#next-1").click(function () {
+                        ca.next();
+                    });
+
+                    $("#pre-1").click(function () {
+                        ca.pre();
+                    });
+
+                    $("#first-1").click(function () {
+                        ca.cur(0);
+                    });
+
+                    $("#last-1").click(function () {
+                        ca.cur(ca.total - 1);
+                    });
+                })();
+            </script>
+
+            <div class="demo">
+                <h4>【创建】默认配置 多张</h4>
+                
+                <p class="desc">多张无需设置每一项的宽度，程序会根据合模型自动计算；需要注意的是 mod-carousel-item 和 mod-carousel-item-cur 需要保持一致的宽高</p>
+                <div id="carousel-2" style="width: 900px; height: 200px; border: 1px solid black" ></div>
+                <a id="first-2" href="javascript:void(0);">first</a>
+                <a id="pre-2" href="javascript:void(0);">上一屏</a>
+                <a id="next-2" href="javascript:void(0);">下一屏</a>
+                <a id="last-2" href="javascript:void(0);">last</a>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+
+            <script>
+                (function () {
+                    var Carousel = require("jsmod/ui/carousel"),
+                        ca, cur = 0;
+
+                    ca = new Carousel("#carousel-2", {
+                        count: 3,
+                        current: 0,
+                        htmls: [
+                            '<div class="image-content"><img src="' + __uri("../../static/images/banner_1_1.jpg") + '"></div>', 
+                            '<div class="image-content"><img src="' + __uri("../../static/images/banner_1_2.jpg") + '"></div>', 
+                            '<div class="image-content"><img src="' + __uri("../../static/images/banner_1_3.jpg") + '"></div>', 
+                            '<div class="image-content"><img src="' + __uri("../../static/images/banner_1_4.jpg") + '"></div>', 
+                            '<div class="image-content"><img src="' + __uri("../../static/images/banner_1_5.jpg") + '"></div>',
+                            '<div class="image-content"><img src="' + __uri("../../static/images/banner_1_6.jpg") + '"></div>',
+                            '<div class="image-content"><img src="' + __uri("../../static/images/banner_1_7.jpg") + '"></div>'
+                        ]
+                    });
+
+                    $("#next-2").click(function () {
+                        // true 参数既阻止了设置 mod-carousel-item-cur；程序只进行动画滚动
+                        cur = ca.cur(cur + 3, null, true);
+                    });
+
+                    $("#pre-2").click(function () {
+                        // true 参数既阻止了设置 mod-carousel-item-cur；程序只进行动画滚动
+                        cur = ca.cur(cur - 3, null, true);
+                    });
+
+                    $("#first-2").click(function () {
+                        cur = ca.cur(0);
+                    });
+
+                    $("#last-2").click(function () {
+                        cur = ca.cur(ca.total - 1);
+                    });
+
+                    ca.getElement().delegate(".mod-carousel-item", "click", function () {
+                        var index = $(this).data("index");
+
+                        cur = ca.cur(index);
+                    });
+                })();
+            </script>
+            <!--inline[../../component/comment.html]-->
+        </div>
+
+        <!--inline[../../component/footer.html]-->
+    </body>
+</html>

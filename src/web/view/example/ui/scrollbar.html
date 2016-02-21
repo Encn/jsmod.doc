@@ -1,0 +1,207 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>scrollbar</title>
+        <!--inline[../../component/static.html]-->
+    </head>
+    <body>
+        <!--inline[../../component/header-example.html]-->
+
+        <div class="content">
+            <h1 class="title">
+                <a href="/api/scrollbar.html" target="_blank">API</a>
+                <a href="/test/scrollbar/index.html" target="_blank">Unit Test</a>
+                Scrollbar (滚动条)
+            </h1>
+            
+            <div class="demo">
+                <h4>【创建】默认配置</h4>
+                <p class="desc">
+                    【必要条件】需要容器有且只有唯一子元素，子元素内部无任何限制。<br/>
+
+                    控件会创建一间隔为 500ms 的定时器，以捕获容器、唯一子元素的高度变化，所以在删除容器前最好调用实例的 destroy 方法避免多余的性能开销
+                </p>
+                <div id="scrollbar-1" style="width: 300px; height: 200px; border: 1px solid black; padding: 7px; margin: 10px;" >
+                    <div class="container">
+                        <img style="width: 100%; height: 200px;" height="200" src="../../static/images/banner_1_1.jpg"/>
+                        <img style="width: 100%; height: 200px;" height="200" src="../../static/images/banner_1_2.jpg"/>
+                    </div>
+                </div>
+
+                <a id="add-1" href="javascript:void(0)">增加</a>
+                <a id="remove-1" href="javascript:void(0)">减少</a>
+                <a id="change-add-1" href="javascript:void(0)">+容器高度</a>
+                <a id="change-remove-1" href="javascript:void(0)">-容器高度</a>
+                <a id="destroy-1" href="javascript:void(0)">destroy</a>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function () {
+                    var Scrollbar = require("jsmod/ui/scrollbar"),
+                        sb;
+
+                    sb = new Scrollbar("#scrollbar-1");
+
+                    // 增加子元素的高度
+                    $("#add-1").click(function () {
+                        $("#scrollbar-1 img:last").clone().appendTo("#scrollbar-1 .container");
+                    });
+
+                    // 减少子元素的高度
+                    $("#remove-1").click(function () {
+                        if ($("#scrollbar-1 img").length > 1) {
+                            $("#scrollbar-1 img:last").remove();
+                        }
+                    });
+
+                    // 改变容器高度
+                    $("#change-add-1").click(function () {
+                        $("#scrollbar-1").height($("#scrollbar-1").height() + 100);
+                    });
+                    $("#change-remove-1").click(function () {
+                        $("#scrollbar-1").height($("#scrollbar-1").height() - 100);
+                    });
+
+                    $("#destroy-1").click(function () {
+                        sb.destroy();
+                    });
+                })();
+            </script>
+
+            <div class="demo">
+                <h4>【创建】自定义样式</h4>
+                <p class="desc">
+                    传入参数 option.scrollbarNodeStyle      改变滑动按钮样式<br/>
+                    传入参数 option.scrollbarNodeHoverStyle 改变滑动按钮hover, 滑动中的样式<br/>
+                    以上两个属性为满足 css 定义规范的对象，默认配置参考 api 文档；
+                    与默认参数的关系为完全覆盖，既定义后默认样式完全不会产生效果
+                </p>
+                <div id="scrollbar-2" style="width: 300px; height: 200px; border: 1px solid black; padding-right: 30px; margin: 10px;" >
+                    <div class="container">
+                        <img style="width: 100%; height: 200px;" height="200" src="../../static/images/banner_1_3.jpg"/>
+                        <img style="width: 100%; height: 200px;" height="200" src="../../static/images/banner_1_4.jpg"/>
+                    </div>
+                </div>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function () {
+                    var Scrollbar = require("jsmod/ui/scrollbar"),
+                        sb;
+
+                    sb = new Scrollbar("#scrollbar-2", {
+                        scrollbarNodeStyle: {
+                            "background": 'red url(' + __uri("../../static/images/home/arrow-down.png") + ') no-repeat center center',
+                            "width": "30px"
+                        },
+                        scrollbarNodeHoverStyle: {
+                            "background": 'green url(' + __uri("../../static/images/home/arrow-down.png") + ') no-repeat center center'
+                        },
+                        offsetRight: 0
+                    });
+                })();
+            </script>
+
+            <div class="demo">
+                <h4>【创建】自动隐藏滚动条</h4>
+                <p class="desc">
+                    option.autoHide = true 开启自动隐藏功能; 滚动条会在鼠标离开容器 3000ms 后隐藏<br/>
+                    【警告】开启此功能后可能会使使用者无法判断容器内部是否有更多内容，慎用
+                </p>
+                <div id="scrollbar-3" style="width: 300px; height: 200px; border: 1px solid black; margin: 10px; padding-right: 5px;" >
+                    <div class="container">
+                        <img style="width: 100%; height: 200px;" height="200" src="../../static/images/banner_1_5.jpg"/>
+                        <img style="width: 100%; height: 200px;" height="200" src="../../static/images/banner_1_1.jpg"/>
+                    </div>
+                </div>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function () {
+                    var Scrollbar = require("jsmod/ui/scrollbar"),
+                        sb;
+
+                    sb = new Scrollbar("#scrollbar-3", {
+                        autoHide: true,
+                        offsetRight: 0
+                    });
+                })();
+            </script>
+
+            <div class="demo">
+                <h4>【修改】滚动到特定位置</h4>
+                <p class="desc">
+                    调用 scroll 方法滚动到特定的位置<br/>
+                    1. 滚动到顶部、底部 scroll("top"); scroll("bottom"); <br/>
+                    2. 滚动到特定的位置 scroll(100); <br/>
+                    3. 滚动到某个元素(元素必须在容器内) scroll("#target");
+                </p>
+                <div id="scrollbar-4" style="width: 300px; height: 200px; border: 1px solid black; padding: 7px; margin: 10px;" >
+                    <div class="container">
+                        <img  id="pos-4-1" style="width: 100%; height: 200px;" height="200" src="../../static/images/banner_1_3.jpg"/>
+                        <div style="position: relative; padding: 50px; border: 1px solid black">
+                            <a id="pos-4-3" href="javascript:void(0)" style="color: red;">百度</a>
+                        </div>
+                        <div id="pos-4-4" style="position: relative; padding: 50px; border: 1px solid black">
+                            <a id="pos-4-4" href="javascript:void(0)">腾讯</a>
+                        </div>
+                        <div id="pos-4-5" style="position: relative; padding: 50px; border: 1px solid black">
+                            <a id="pos-4-5" href="javascript:void(0)">阿里</a>
+                        </div>
+                        <img  id="pos-4-2" style="width: 100%; height: 200px;" height="200" src="../../static/images/banner_1_4.jpg"/>
+                    </div>
+                </div>
+
+                <a id="top-2" href="javascript:void(0)">顶部</a>
+                <a id="bottom-2" href="javascript:void(0)">底部</a>
+                <a id="ele-2-1" href="javascript:void(0)">百度</a>
+                <a id="ele-2-2" href="javascript:void(0)">腾讯</a>
+                <a id="ele-2-3" href="javascript:void(0)">阿里</a>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function () {
+                    var Scrollbar = require("jsmod/ui/scrollbar"),
+                        sb;
+
+                    sb = new Scrollbar("#scrollbar-4");
+
+                    $("#top-2").click(function () {
+                        sb.scroll("top");
+                    });
+
+                    $("#bottom-2").click(function () {
+                        sb.scroll("bottom");
+                    });
+
+                    $("#ele-2-1").click(function () {
+                        sb.scroll("#pos-4-3");
+                    });
+
+                    $("#ele-2-2").click(function () {
+                        sb.scroll("#pos-4-4");
+                    });
+
+                    $("#ele-2-3").click(function () {
+                        sb.scroll("#pos-4-5");
+                    });
+                })();
+            </script>
+            <!--inline[../../component/comment.html]-->
+        </div>
+
+        <!--inline[../../component/footer.html]-->
+    </body>
+</html>

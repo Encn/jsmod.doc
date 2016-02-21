@@ -1,0 +1,167 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>Dialog</title>
+        <style type="text/css">
+            .demo-dialog {
+                padding: 20px 10px;
+            }
+
+            .demo-dialog .close {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+            }
+
+            .demo-dialog-orange,
+            .demo-dialog-orange a {
+                color: white;
+            }
+
+        </style>
+        <!--inline[../../component/static.html]-->
+    </head>
+    <body>
+        <!--inline[../../component/header-example.html]-->
+        <div class="content">
+            <h1 class="title">
+                <a href="/api/dialog.html" target="_blank">API</a>
+                <a href="/test/dialog/index.html" target="_blank">Unit Test</a>
+                Dialog (弹窗)
+            </h1>
+
+            <div class="demo">
+                <h4>【创建】默认配置</h4>
+                <p class="desc">基础的 dialog，点击 esc 关闭弹窗</p>
+                <a id="create1-1" href="javascript:void(0)">弹出</a>
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var Dialog = require("jsmod/ui/dialog"), d;
+
+                    $("#create1-1").click(function () {
+                        Dialog.reset();
+
+                        d = new Dialog({
+                            html: '<div class="demo-dialog"><a class="close" href="javascript:void(0)">关闭</a><h2>happy new year！</h2></div>',
+                            height: 300
+                        });
+
+                        d.getElement().delegate(".close", "click", function (argument) {
+                            d.hide({fade: true});
+                        });
+
+                        d.show({fade: true});
+                    });
+                })()
+            </script>
+
+            <div class="demo">
+                <h4>【创建】设置点击 esc 不关闭弹窗</h4>
+                <a id="create1-2" href="javascript:void(0)">弹出</a>
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var Dialog = require("jsmod/ui/dialog"), d;
+
+                    $("#create1-2").click(function () {
+                        Dialog.reset();
+                        Dialog.disableKeyEvent();
+
+                        d = new Dialog({
+                            html: '<div class="demo-dialog"><h2>三秒后自动关闭</h2><p>点击 esc 木用</p></div>',
+                            height: 200,
+                            width: 200
+                        });
+                        d.show({fade: true});
+
+                        setTimeout(function () {
+                            d.hide({fade: true});
+                        }, 3000)
+                    });
+                })()
+            </script>
+
+            <div class="demo">
+                <h4>【创建】设置 opacity 为 0 </h4>
+                <p class="desc">设置完全透明，并且改变弹窗的背景色</p>
+                <a id="create1-3" href="javascript:void(0)">弹出</a>
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var Dialog = require("jsmod/ui/dialog"), d;
+
+                    $("#create1-3").click(function () {
+                        Dialog.reset();
+                        Dialog.setOpacity(0);
+
+                        d = new Dialog({
+                            html: '<div class="demo-dialog demo-dialog-orange"><a class="close" href="javascript:void(0)">关闭</a>周围透明但不能点击</div>',
+                            height: 200,
+                            width: 200,
+                            backgroundColor: "#e7672e"
+                        });
+
+                        d.getElement().delegate(".close", "click", function (argument) {
+                            d.hide({fade: true});
+                        });
+
+                        d.show({fade: true});
+                    });
+                })()
+            </script>
+
+            <div class="demo">
+                <h4>【创建】设置偏移，动态增加宽度、高度</h4>
+                <p class="desc">调用 setBox 函数会自动将 dialog 重新定位</p>
+                <a id="create1-4" href="javascript:void(0)">弹出</a>
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var Dialog = require("jsmod/ui/dialog"), d;
+
+                    $("#create1-4").click(function () {
+                        Dialog.reset();
+
+                        d = new Dialog({
+                            html: '<div class="demo-dialog"><a class="close" href="javascript:void(0)">关闭</a><p>向上偏移200像素</p><a class="action" href="javascript:void(0)">增加10高度宽度</a></div>',
+                            height: 100,
+                            width: 200,
+                            offset: {
+                                top: -200
+                            }
+                        });
+
+                        d.getElement().find(".action").click(function () {
+                            d.setBox({
+                                width: d.option.width + 10,
+                                height: d.option.height + 10
+                            })
+                        });
+
+                        d.getElement().delegate(".close", "click", function (argument) {
+                            d.hide({fade: true});
+                        });
+
+                        d.show({fade: true});
+                    });
+                })()
+            </script>
+            <!--inline[../../component/comment.html]-->
+        </div>
+
+        <!--inline[../../component/footer.html]-->
+    </body>
+</html>

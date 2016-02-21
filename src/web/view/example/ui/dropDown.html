@@ -1,0 +1,129 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>DropDown</title>
+        <!--inline[../../component/static.html]-->
+    </head>
+    <body>
+        <!--inline[../../component/header-example.html]-->
+        <div class="content">
+            <h1 class="title">
+                <a href="/api/dropDown.html" target="_blank">API</a>
+                <a href="/test/dropDown/index.html" target="_blank">Unit Test</a>
+                DropDown (下拉)
+            </h1>
+            
+            <div class="demo">
+                <h4>【创建】默认配置</h4>
+                <p class="desc">创建下拉控件，并监听事件，点击索引为 0 的项目的事件注册函数中设置 e.preventDropDownHide 阻止了下拉的关闭 </p>
+                <a id="create-1-1" href="javascript:void(0)">下拉</a>
+                <a id="create-1-2" href="javascript:void(0)">重置</a>
+                <span id="console-1-1"></span>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var DropDown = require("jsmod/ui/fixElement/dropDown"),
+                        d;
+
+                    d = new DropDown(["a", "b"], {target: "#create-1-1", fun: function (index, value) {
+                        return {
+                            key: index,
+                            value: value,
+                            html: '<a href="javascript:void(0)">我是选项：' + value + '</a>'
+                        }
+                    }});
+
+                    $("#create-1-1").click(function () {
+                        d.toggle();
+                    });
+
+                    $("#create-1-2").click(function () {
+                        d.resetItems(["c", "d"]);
+                    });
+
+                    $(d).on("selectitem", function (e) {
+                        $("#console-1-1").html("你选择了：" + e.value);
+                        if (e.key == 0) {
+                            e.preventDropDownHide = true;
+                        }
+                        return false;
+                    });
+                })()
+            </script>
+
+            <div class="demo">
+                <h4>【创建】目标元素为输入框</h4>
+                <p class="desc">当 target 为 input 时创建下拉，通过键盘上下和 enter 键可进行选择</p>
+                <input style="width: 100px; border: 1px solid gray;" id="create-2-1" href="javascript:void(0)" placeholder="按上下键试试"/>
+                <span id="console-2-1" href="javascript:void(0)"></span>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var DropDown = require("jsmod/ui/fixElement/dropDown"),
+                        d;
+
+                    d = new DropDown(["a", "b", "c", "d"], {target: "#create-2-1", offset: {left: -7, top: 0}, fun: function (key, value) {
+                        return {
+                            key: key,
+                            value: value,
+                            html: '<a href="javascript:void(0)">我是选项：' + value + '</a>'
+                        }
+                    }});
+
+                    $(d).on("selectitem", function (e) {
+                        $("#console-2-1").html("你选择了：" + e.value);
+                        $("#create-2-1").val(e.value);
+                        return false;
+                    });
+                })();
+            </script>
+
+            <div class="demo">
+                <h4>【修改】激活某个项目</h4>
+                <p class="desc">调用激活项目方法会触发 selectitem 事件</p>
+                <input style="width: 100px; border: 1px solid gray;" id="modify-1-1" href="javascript:void(0)"/>
+                <a  id="modify-1-2" href="javascript:void(0)">激活索引值为1的项目（第二个项目）</a>
+                <span id="console-3-1" href="javascript:void(0)"></span>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var DropDown = require("jsmod/ui/fixElement/dropDown"),
+                        d;
+
+                    d = new DropDown(["a", "b", "c", "d"], {target: "#modify-1-1", offset: {left: -7, top: 0}, fun: function (key, value) {
+                        return {
+                            key: key,
+                            value: value,
+                            html: '<a href="javascript:void(0)">我是选项：' + value + '</a>'
+                        }
+                    }});
+
+                    $(d).on("selectitem", function (e) {
+                        $("#console-3-1").html("你选择了：" + e.value);
+                        $("#modify-1-1").val(e.value);
+                        return false;
+                    });
+
+                    $("#modify-1-2").click(function () {
+                        d.active(1);
+                    });
+                })();
+            </script>
+            <!--inline[../../component/comment.html]-->     
+        </div>
+
+        <!--inline[../../component/footer.html]-->
+    </body>
+</html>

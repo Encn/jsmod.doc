@@ -1,0 +1,168 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>TIP</title>
+        <!--inline[../../component/static.html]-->
+    </head>
+    <body>
+        <!--inline[../../component/header-example.html]-->
+        <div class="content">
+            <h1 class="title">
+                <a href="/api/tip.html" target="_blank">API</a>
+                <a href="/test/tip/index.html" target="_blank">Unit Test</a>
+                Tip (信息提示)
+            </h1>
+
+            <div class="demo">
+                <h4>【创建】hover 创建信息提示</h4>
+                
+                <p class="desc">参数数据由 js 指定</p>
+                <a id="create-1-1" href="javascript:void(0);">鼠标</a>
+                
+                <p class="desc">参数数据由 html 属性指定</p>
+                <a id="create-1-2" data-target-type="right" data-title="html-标题" data-content="html-内容" href="javascript:void(0);">鼠标</a>
+                
+                <p class="desc">同时创建一组信息提示</p>
+                <a class="create-1-3" href="javascript:void(0);">鼠标</a>
+                <a class="create-1-3" href="javascript:void(0);">鼠标</a>
+                <a class="create-1-3" data-target-type="bottom, right, right" data-title="html属性指定数据" data-content="html属性指定数据内容, 定位" href="javascript:void(0);">特殊的</a>
+                <a class="create-1-3" href="javascript:void(0);">鼠标</a>
+
+                <p class="desc">hover 时没有延迟，直接显示</p>
+                <a id="create-1-4" data-title="html-标题" data-content="html-内容" href="javascript:void(0);">鼠标</a>
+
+                <p class="desc">鼠标移动到 tip 内容中依然隐藏</p>
+                <a id="create-1-5" data-title="html-标题" data-content="html-内容" href="javascript:void(0);">鼠标</a>
+
+                <p class="desc">自定义 className</p>
+                <a id="create-1-6" data-title="html-标题" data-content="html-内容" href="javascript:void(0);">鼠标</a>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div> 
+            <script>
+                var Tip = require("jsmod/ui/fixElement/tip");
+                (function() {
+                    new Tip({targets: "#create-1-1", title: "我是标题", content: "我是内容"});
+                })();
+
+                (function() {
+                    new Tip({targets: "#create-1-2"});
+                })();
+
+                (function() {
+                    var tip;
+
+                    tip = new Tip({targets: ".create-1-3", title: "我是大量的标题", content: "我是大量的内容"});
+
+                    $("#destroy1-3").click(function () {
+                        tip.destroy();
+                    });
+                })();
+
+                (function() {
+                    new Tip({targets: "#create-1-4", delay: 0});
+                })();
+
+                (function() {
+                    new Tip({targets: "#create-1-5", leavePreventHide: false});
+                })();
+
+                (function() {
+                    new Tip({targets: "#create-1-6", className: "mod-tip-orange"});
+                })();
+            </script>
+
+            <div class="demo">
+                <h4>【创建】click 创建信息提示</h4>
+                
+                <p class="desc">click 触发信息提示，点击除信息提示内元素关闭</p>
+                <a id="create-2-1" data-content="2014发财" href="javascript:void(0);">点击</a>
+
+                <p class="desc">点击到其他地方不关闭</p>
+                <a id="create-2-2" data-content="2014发财" href="javascript:void(0);">点击</a>
+
+                <p class="desc">设置信息提示偏移</p>
+                <a id="create-2-3" data-content="2014发财" href="javascript:void(0);">点击</a>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                var Tip = require("jsmod/ui/fixElement/tip");
+
+                (function() {
+                    new Tip({targets: "#create-2-1", trigger: "click"});
+                })();
+
+                (function() {
+                    new Tip({targets: "#create-2-2", trigger: "click", otherClickHide: false});
+                })();
+
+                (function() {
+                    new Tip({targets: "#create-2-3", trigger: "click", offset: {left: 10, top: -10}});
+                })();
+            </script>
+
+            <div class="demo">
+                <h4>【创建】manual 相关参数</h4>
+                
+                <p class="desc">手动显示、隐藏信息提示</p>
+                <a id="create-3-1" data-content="<a href='http://hotel.baidu.com' target='_blank'>酒店首页</a>" href="javascript:void(0);">O</a>
+                <a id="create-3-2" href="javascript:void(0);">显示</a>
+                <a id="create-3-3" href="javascript:void(0);">隐藏</a>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var Tip = require("jsmod/ui/fixElement/tip"),
+                        t;
+
+                    t = new Tip({targets: "#create-3-1", trigger: "manual"});
+
+                    $("#create-3-2").click(function () {
+                        t.show($("#create-3-1"));
+                    });
+
+                    $("#create-3-3").click(function () {
+                        t.hide($("#create-3-1"));
+                    });
+                })();
+
+            </script>
+
+            <div class="demo">
+                <h4>【修改】重置信息提示内容</h4>
+                
+                <a id="modify-1-1" data-content="2014年" href="javascript:void(0);">点击</a>
+                <a id="modify-1-2" href="javascript:void(0);">重置</a>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var Tip = require("jsmod/ui/fixElement/tip"),
+                        t, i = 0;
+
+                    t = new Tip({targets: "#modify-1-1", trigger: "click", otherClickHide: false});
+
+                    $("#modify-1-2").click(function () {
+                        t.resetTip("#modify-1-1", {
+                            content: "大家发财*" + (++i)
+                        });
+                    })
+                })();
+            </script>
+            <!--inline[../../component/comment.html]-->
+        </div>
+
+        <!--inline[../../component/footer.html]-->
+    </body>
+</html>

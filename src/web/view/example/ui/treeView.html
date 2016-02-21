@@ -1,0 +1,91 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>TreeView</title>
+        <!--inline[../../component/static.html]-->
+        <style>
+            ul li {
+                margin-left: 10px;
+            }
+
+            .treeview-node {
+                font-weight: normal;
+            }
+
+            .treeview-node-father {
+                font-weight: bold;
+            }
+
+            .treeview-node-father-expanded > a {
+                color: red;
+            }
+
+            .treeview-toggle {
+                display: inline-block;
+                width: 30px;
+                height: 30px;
+                background-color: red;
+            }
+
+            .treeview-toggle-expanded {
+                background-color: gray;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="content">
+            <h1>TreeView</h1>
+            <h3><a href="/api/treeView.html" target="_blank">API</a></h3>
+
+            <div class="demo">
+                <div id="create1-1"></div>
+
+                <script>
+                    (function() {
+                        var TreeView = require("jsmod/ui/treeView"),
+                            datas;
+
+                        datas = [
+                            {
+                                text: "<a href='javascript:void(0)'>第1个</a>",
+                                children: [
+                                    {
+                                        text: "<a href='javascript:void(0)'>1-1</a>"
+                                    },
+                                    {
+                                        text: "<a href='javascript:void(0)'>1-2</a>",
+                                        children: [
+                                            {
+                                                text: "<a href='javascript:void(0)'>1-2-1</a>",
+                                                children: [
+                                                    {
+                                                        text: "<a href='javascript:void(0)'>1-2-1-1</a>"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                text: "<a href='javascript:void(0)'>1-2-2</a>",
+                                                expanded: true,
+                                                children: [
+                                                    {
+                                                        text: "<a href='javascript:void(0)'>1-2-2-1</a>"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                text: "<a href='javascript:void(0)'>第2个</a>"
+                            }
+                        ]
+
+                        new TreeView(datas, {content: "#create1-1"});
+                            
+                    })();
+                </script>
+            </div>
+        </div>
+    </body>
+</html>

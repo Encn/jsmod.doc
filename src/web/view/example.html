@@ -1,0 +1,516 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>home</title>
+        <!--inline[./component/static.html]-->
+    </head>
+    <body>
+        <!--inline[./component/header-example.html]-->
+        <div class="content">
+        
+            <!-- fixElement -->
+            <div class="example-container">
+                <h2>
+                    <a class="more" href="/views/example/ui/fixElement.html" target="_blank">全部示例</a>
+                    <a class="api" href="/api/fixElement.html" target="_blank">API</a>
+                    1. FixElement (绝对定位元素)
+                </h2>
+                <div class="example-content">
+                    <p class="desc">
+                        提供了将 dom 元素（html片段）定位到页面特定位置（坐标，元素附近）的基础支持
+                    </p>
+
+                    <ul class="eg">
+                        <li class="eg-item">
+                            <p class="title">基于屏幕定位, top:650, left: 400</p>
+
+                            <a id="fixelement-1" href="javascript:void(0)">点击</a>
+                        </li>
+                        <li class="eg-item">
+                            <p class="title">基于元素定位</p>
+
+                            <a id="fixelement-2" href="javascript:void(0)">点击</a>
+                        </li>
+                        <li class="eg-item">
+                            <a id="fixelement-clear" href="javascript:void(0)">清空</a>
+                        </li>
+                    </ul>
+                    <a class="source" href="javascript:void(0)">源码</a>
+                </div>
+<script type="text/javascript">
+    (function () {
+        var FixElement = require("jsmod/ui/fixElement"),
+            f1, f2;
+
+        $("#fixelement-1").click(function () {
+            f1 && f1.destroy();
+            f1 = new FixElement('<div class="mod-fixelement">happy new year!<div>', {
+                position: {
+                    top: 650,
+                    left: 400
+                }
+            });
+        });
+
+        $("#fixelement-2").click(function () {
+            f2 && f2.destroy();
+            f2 = new FixElement('<div class="mod-fixelement">happy new year!<div>', {
+                target: this
+            });
+        });
+
+        $("#fixelement-clear").click(function () {
+            f2 && f2.destroy();
+            f1 && f1.destroy();
+            f1 = undefined;
+            f2 = undefined;
+        });
+    })();
+</script>
+            </div>
+
+            <!-- tip -->
+            <div class="example-container example-container-double">
+                <h2>
+                    <a class="more" href="/views/example/ui/tip.html" target="_blank">全部示例</a>
+                    <a class="api" href="/api/tip.html" target="_blank">API</a>
+                    2. Tip (信息提示)
+                </h2>
+                <div class="example-content">
+                    <p class="desc">
+                        为一组 dom 元素绑定信息提示控件，可自定义触发条件、位置等
+                    </p>
+
+                    <ul class="eg">
+                        <li class="eg-item">
+                            <p class="title">不同的鼠标事件触发展示 Tip</p>
+
+                            <a id="tip-1" href="javascript:void(0)">hover</a>
+                            <a id="tip-2" href="javascript:void(0)">click</a>
+                        </li>
+                        <li class="eg-item">
+                            <p class="title">修改 Tip 实例</p>
+
+                            <a id="tip-3" href="javascript:void(0)">Toggle</a>
+                            <a id="tip-4" href="javascript:void(0)">修改</a>
+                        </li>
+                        <li class="eg-item">
+                            <a id="tip-clear" href="javascript:void(0)">清空</a>
+                        </li>
+                    </ul>
+                    <a class="source" href="javascript:void(0)">源码</a>
+                </div>
+<script type="text/javascript">
+    (function () {
+        var Tip = require("jsmod/ui/fixElement/tip"),
+            t1, t2, t3, i = 0;
+
+        // 创建鼠标 hover 展示 tip
+        t1 = new Tip({
+            targets: "#tip-1",
+            content: "Hover Place",
+            trigger: "hover"
+        });
+
+        // 创建鼠标 click 展示 tip
+        t2 = new Tip({
+            targets: "#tip-2",
+            content: "Click Place",
+            trigger: "click"
+        });
+
+        t3 = new Tip({
+            targets: "#tip-3",
+            content: "Manual Place",
+            trigger: "manual",
+            targetType: "left"
+        });
+
+        $("#tip-4").click(function () {
+            // 修改 tip 中内容
+            t3.resetTip("#tip-3", {
+                content: "修改第" + (++i) + "次"
+            });
+        });
+
+        $("#tip-3").click(function () {
+            t3.toggle("#tip-3");
+        });
+
+        $("#tip-clear").click(function () {
+            t2.hide("#tip-2");
+            t3.hide("#tip-3");
+        });
+    })();
+</script>
+            </div>
+
+            <!-- dropDown -->
+            <div class="example-container">
+                <h2>
+                    <a class="more" href="/views/example/ui/dropDown.html" target="_blank">全部示例</a>
+                    <a class="api" href="/api/dropDown.html" target="_blank">API</a>
+                    3. DropDown (下拉)
+                </h2>
+                <div class="example-content">
+                    <p class="desc">
+                        下拉组件，提供 html 数据，实现各种下拉操作
+                    </p>
+
+                    <ul class="eg">
+                        <li class="eg-item">
+                            <p class="title">显示下拉组件并监听事件</p>
+
+                            <a id="dropdown-1" href="javascript:void(0)">点击</a>
+                            <span id="dropdown-console" href="javascript:void(0)"></span>
+                        </li>
+                    </ul>
+                    <a class="source" href="javascript:void(0)">源码</a>
+                </div>
+<script type="text/javascript">
+    (function () {
+        var DropDown = require("jsmod/ui/fixElement/dropDown"),
+            d;
+
+        // 创建下拉
+        d = new DropDown(["a", "b"], {target: "#dropdown-1", fun: function (key, value) {
+            return {
+                key: key,
+                value: value,
+                html: '<a href="javascript:void(0)">我是选项：' + value + '</a>'
+            }
+        }});
+
+        $("#dropdown-1").click(function () {
+            d.toggle();
+        });
+
+        // 注册选择事件
+        $(d).on("selectitem", function (e) {
+            $("#dropdown-console").html("我是索引" + e.key + ", 其值是：" + e.value);
+        });
+    })();
+</script>
+            </div>
+
+
+            <!-- select -->
+            <div class="example-container example-container-double">
+                <h2>
+                    <a class="more" href="/views/example/ui/select.html" target="_blank">全部示例</a>
+                    <a class="api" href="/api/select.html" target="_blank">API</a>
+                    4. Select (多选菜单)
+                </h2>
+                <div class="example-content">
+                    <p class="desc">
+                        针对 select dom 的扩展，与 select dom 保持一致的操作体验，但可自定义各种样式
+                    </p>
+
+                    <ul class="eg">
+                        <li class="eg-item">
+                            <p class="title">实例化下拉控件 input 作为数据容器可发向后端</p>
+
+                            <input readonly="readonly" class="custom-select-input" id="select-1" type="text">
+                        </li>
+                    </ul>
+                    <a class="source" href="javascript:void(0)">源码</a>
+                </div>
+<script type="text/javascript">
+    var Select = require("jsmod/ui/fixElement/dropDown/select"),
+        select;
+
+    select = new Select([{
+        key: 0,
+        value: "苹果"
+    }, {
+        key: 1,
+        value: "梨子"
+    }, {
+        key: 2,
+        value: "橘子"
+    }], {seed: "#select-1", target: "#select-1", className: "mod-select-fruit"});
+
+    // 选中默认项
+    select.active(0);
+
+</script>
+            </div>
+
+            <!-- suggestion -->
+            <div class="example-container">
+                <h2>
+                    <!-- <a class="more" href="/views/example/ui/suggestion.html" target="_blank">全部示例</a> -->
+                    <a class="api" href="/api/suggestion.html" target="_blank">API</a>
+                    5. Suggestion (输入提示)
+                </h2>
+                <div class="example-content">
+                    <p class="desc">
+                        处理输入提示，兼容各种 ajax 数据配置
+                    </p>
+
+                    <ul class="eg">
+                        <li class="eg-item">
+                            <p class="title">使用 baidu su jsonp 服务创建输入提示模块</p>
+
+                            <input id="suggestion-1" class="custom-suggestion-input" placeholder="输入点什么试试">
+                        </li>
+                    </ul>
+                    <a class="source" href="javascript:void(0)">源码</a>
+                </div>
+<script type="text/javascript">
+    (function () {
+        var Suggestion = require("jsmod/ui/fixElement/dropDown/suggestion"),
+            s, option;
+
+        option = {
+            target: "#suggestion-1",
+            url: "http://suggestion.baidu.com/su",
+            jsonpOption: {
+                jsonp: "cb"
+            },
+            sendData: function (val) {
+                return {
+                    wd: val,
+                    cid: 131,
+                    type: 0
+                }
+            },
+            handleData: function (json) {
+                return json.s;
+            },
+            fun: function (index, value) {
+                return {
+                    key: index,
+                    value: value,
+                    html: '<a href="javascript:void(0)">' + value + '</a>'
+                }
+            },
+            className: "mod-dropdown-baidu"
+        }
+
+        d = new Suggestion(option);
+
+        $(d).on("selectitem", function (e, c) {
+            $("#suggestion-1").val(c.value);
+        });
+    })();
+</script>
+            </div>
+
+            <!-- tab -->
+            <div class="example-container example-container-double">
+                <h2>
+                    <a class="more" href="/views/example/ui/tab.html" target="_blank">全部示例</a>
+                    <a class="api" href="/api/tab.html" target="_blank">API</a>
+                    6. Tab (分栏)
+                </h2>
+                <div class="example-content">
+                    <p class="desc">
+                        为特定的 dom 对象构建分栏，可指定目标对象实现内容切换（也可监听事件自行处理）
+                    </p>
+
+                    <ul class="eg">
+                        <li class="eg-item">
+                            <p class="title">hover 触发分栏</p>
+
+                            <ul class="mod-tab" id="tab-1">
+                                <li class="mod-tab-item" data-target="#create1-content-1"><a href="javascript:void(0);">分栏1</a></li>
+                                <li class="mod-tab-item" data-target="#create1-content-2"><a href="javascript:void(0);">分栏2</a></li>
+                            </ul>
+                            <div class="image-container" id="create1-content-1">
+                                <img width="350" height="260" src="./static/images/example/banner_1_4_a6fe0f0.jpg">
+                            </div>
+                            <div class="image-container" id="create1-content-2">
+                                <img width="350" height="260" src="./static/images/example/banner_1_6_b6d2c57.jpg">
+                            </div>
+                        </li>
+                    </ul>
+                    <a class="source" href="javascript:void(0)">源码</a>
+                </div>
+<script type="text/javascript">
+    (function() {
+        var Tab = require("jsmod/ui/tab");
+
+        new Tab("#tab-1", {
+            trigger: "hover"
+        });
+    })()
+</script>
+            </div>
+
+            <!-- pagination -->
+            <div class="example-container">
+                <h2>
+                    <a class="more" href="/views/example/ui/pagination.html" target="_blank">全部示例</a>
+                    <a class="api" href="/api/pagination.html" target="_blank">API</a>
+                    7. Pagination (分页)
+                </h2>
+                <div class="example-content">
+                    <p class="desc">
+                        分页控件，无需写 html ，提供一个 div 节点自动生成所有的分页所需标签
+                    </p>
+
+                    <ul class="eg">
+                        <li class="eg-item">
+                            <p class="title">创建基本的分页</p>
+
+                            <div id="pagniation-1"></div>
+                        </li>
+                    </ul>
+                    <a class="source" href="javascript:void(0)">源码</a>
+                </div>
+<script type="text/javascript">
+    (function () {
+        var Pagination = require("jsmod/ui/pagination");
+
+        new Pagination("#pagniation-1", {pageCount: 20});
+    })();
+</script>
+            </div>
+
+            <!-- dialog -->
+            <div class="example-container example-container-double">
+                <h2>
+                    <a class="more" href="/views/example/ui/dialog.html" target="_blank">全部示例</a>
+                    <a class="api" href="/api/dialog.html" target="_blank">API</a>
+                    8. Dialog (弹窗)
+                </h2>
+                <div class="example-content">
+                    <p class="desc">
+                        居中定位，并显示遮罩图层，显示时禁止页面滚动
+                    </p>
+
+                    <ul class="eg">
+                        <li class="eg-item">
+                            <p class="title">hover 触发分栏</p>
+
+                            <a id="dialog-1" href="javascript:void(0)">弹出</a>
+                        </li>
+                    </ul>
+                    <a class="source" href="javascript:void(0)">源码</a>
+                </div>
+<script type="text/javascript">
+    (function() {
+        var Dialog = require("jsmod/ui/dialog"), d;
+
+        $("#dialog-1").click(function () {
+            var wWidth = $(window).width(),
+                img;
+
+            d = new Dialog({
+                html: '<div class="image-wrap" style="overflow-y:visible; background-color: black"><a class="close" style="position:absolute;top:5px;right:5px;" href="javascript:void(0)">关闭</a></div>'
+            });
+
+            d.getElement().find(".close").click(function () {
+                d.hide({fade: true});
+            });
+
+            img = new Image();
+            img.onload = function () {
+                d.setBox({
+                    width: img.width,
+                    height: img.height
+                });
+                d.getElement().find(".image-wrap").append(img);
+            }
+            img.src = __uri("./static/images/6159252dd42a28346504031d59b5c9ea15cebf01.jpg");
+            d.show({fade: true});
+        });
+    })()
+</script>
+            </div>
+
+            <!-- Carousel -->
+            <div class="example-container">
+                <h2>
+                    <a class="more" href="/views/example/ui/carousel.html" target="_blank">全部示例</a>
+                    <a class="api" href="/api/carousel.html" target="_blank">API</a>
+                    9. Carousel (轮播)
+                </h2>
+                <div class="example-content">
+                    <p class="desc">
+                        基础的轮播控件，脱离 html、css。使用时传入基础数据
+                    </p>
+
+                    <ul class="eg">
+                        <li class="eg-item">
+                            <p class="title">创建最基本的carousel</p>
+
+                            <div id="carousel-1" style="width: 300px; height: 200px; border: 1px solid black"></div>
+                            <a id="pre-1" href="javascript:void(0);">pre</a>
+                            <a id="next-1" href="javascript:void(0);">next</a>
+                        </li>
+                    </ul>
+                    <a class="source" href="javascript:void(0)">源码</a>
+                </div>
+<script type="text/javascript">
+    (function () {
+        var Carousel = require("jsmod/ui/carousel"),
+            ca;
+
+        ca = new Carousel("#carousel-1", {
+            count: 1,
+            htmls: [
+                '<div class="image-content"><img width="300" src="' + __uri("./static/images/banner_1_1.jpg") + '"></div>', 
+                '<div class="image-content"><img width="300" src="' + __uri("./static/images/banner_1_2.jpg") + '"></div>', 
+                '<div class="image-content"><img width="300" src="' + __uri("./static/images/banner_1_3.jpg") + '"></div>', 
+                '<div class="image-content"><img width="300" src="' + __uri("./static/images/banner_1_4.jpg") + '"></div>', 
+                '<div class="image-content"><img width="300" src="' + __uri("./static/images/banner_1_5.jpg") + '"></div>',
+                '<div class="image-content"><img width="300" src="' + __uri("./static/images/banner_1_6.jpg") + '"></div>',
+                '<div class="image-content"><img width="300" src="' + __uri("./static/images/banner_1_7.jpg") + '"></div>'
+            ]
+        });
+
+        $("#next-1").click(function () {
+            ca.next();
+        });
+
+        $("#pre-1").click(function () {
+            ca.pre();
+        });
+    })();
+</script>
+            </div>
+
+            <!-- Scrollbar -->
+            <div class="example-container">
+                <h2>
+                    <a class="more" href="/views/example/ui/scrollbar.html" target="_blank">全部示例</a>
+                    <a class="api" href="/api/scrollbar.html" target="_blank">API</a>
+                    10. Scrollbar (滚动条)
+                </h2>
+                <div class="example-content">
+                    <p class="desc">
+                        滚动条组件，无需改变容器的形态即可实现自定义滚动条
+                    </p>
+
+                    <ul class="eg">
+                        <li class="eg-item">
+                            <p class="title">创建基本的滚动条</p>
+
+                            <div id="scrollbar-1" style="width: 300px; height: 200px; border: 1px solid black; padding: 7px;" >
+                                <div class="container">
+                                    <img style="width: 100%; height: 200px;" height="200" src="./static/images/banner_1_1.jpg"/>
+                                    <img style="width: 100%; height: 200px;" height="200" src="./static/images/banner_1_2.jpg"/>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    <a class="source" href="javascript:void(0)">源码</a>
+                </div>
+<script type="text/javascript">
+    (function () {
+        var Scrollbar = require("jsmod/ui/scrollbar"),
+            sb;
+
+        sb = new Scrollbar("#scrollbar-1");
+    })();
+</script>
+            </div>
+
+
+        </div>
+
+        <!--inline[./component/footer.html]-->
+    </body>
+</html>

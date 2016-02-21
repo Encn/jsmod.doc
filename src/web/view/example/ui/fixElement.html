@@ -1,0 +1,273 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>FixElement</title>
+        <style type="text/css">
+            .targt-select {
+                margin-left: 330px;
+            }
+
+            .targt-select select {
+                float: left;
+                margin-right: 20px;
+            }
+
+            #target-2 {
+                float: left;
+                width: 200px;
+                height: 200px;
+                margin-top: 30px;
+                border: 1px solid black;
+            }
+        </style>
+        <!--inline[../../component/static.html]-->
+    </head>
+    <body>
+        <!--inline[../../component/header-example.html]-->
+        <div class="content">
+            <h1 class="title">
+                <a href="/api/fixElement.html" target="_blank">API</a>
+                <a href="/test/fixElement/index.html" target="_blank">Unit Test</a>
+                FixElement (绝对定位元素)
+            </h1>
+
+            <div class="demo">
+                <h4>【创建】屏幕定位、元素周边定位</h4>
+                <p class="desc">
+                    创建基于屏幕定位 (position: absolute), 会自动进行 ie6 hack 处理<br/>
+
+                    定位方式为决定定位，初始化时不能传入 option.target 参数，且需要传入 option.position 参数 (top: 100, left: 100)
+
+                    option.fixed 参数传入 false 或 不传，则会采取此方式定位
+                <p>
+                <a id="create-1-1" href="javascript:void(0);">点击</a>
+                <p class="desc">
+                    创建基于屏幕定位 (position: fixed), 会自动进行 ie6 hack 处理 <br/>
+
+                    与 "position: absoute" 的定位方式传入参数差别在于 option.fixed = true
+                </p>
+                <a id="create-1-2" href="javascript:void(0);">点击</a>
+                <p class="desc">
+                    创建基于目标元素定位 <br/>
+
+                    传入 option.target 指定基于哪个元素定位，其他配置参数详见 API 文档
+                </p>
+                <a id="create-1-3" href="javascript:void(0);">点击</a>
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+
+            <script>
+                (function() {
+                    var FixElement = require("jsmod/ui/fixElement");
+
+                    // 创建基于屏幕定位 (position: absolute)
+                    $("#create-1-1").click(function () {
+                        new FixElement('<div class="mod-fixelement">Hello World!</div>', {
+                            position: {left: 100, top: 150}
+                        });
+                    });
+
+                    // 创建基于屏幕定位 (position: fixed)
+                    $("#create-1-2").click(function () {
+                        new FixElement('<div class="mod-fixelement">滚动屏幕试试</div>', {
+                            position: {left: 800, top: 350},
+                            fixed: true
+                        });
+                    });
+
+                    // 创建基于目标元素定位
+                    $("#create-1-3").click(function () {
+                        new FixElement('<div class="mod-fixelement">Hello World!</div>', {
+                            target: "#create-1-3"
+                        });
+                    });
+                })()
+            </script>
+
+            <div class="demo">
+                <h4>【创建】targetType 参数介绍</h4>
+                <p class="desc">
+                    targetType 用 "," 分割可传入一至三个值 <br/>
+
+                    第一个参数指示在目标元素哪一侧，可选值 top, right, bottom, left <br/>
+
+                    第二个参数指示在目标元素某一条边的位置，例如第一个参数为 top 时，第二个参数的可选值为 left, right, center <br/>
+
+                    第三个参数指示在目标元素某一条边的位置的扩展，例如如下 demo 初始状态第一个参数为 top ，第二个参数为 right, 第三个值为 left <br/>
+
+                    多次实验如下 demo 体会各个值的含义<br/>
+
+                    如果传入参数不正确会抛出异常
+                </p>
+                <div style="overflow: hidden; zoom: 1">
+                    <div id="target-2" href="javascript:void(0);"></div>
+                    <div class="targt-select">
+                        <select class="target-type-select">
+                            <option value="top">top</option>
+                            <option value="right">right</option>
+                            <option value="bottom">bottom</option>
+                            <option value="left">left</option>
+                            <option value="center">center</option>
+                        </select>
+
+                        <select class="target-type-select">
+                            <option value="top">top</option>
+                            <option selected="selected" value="right">right</option>
+                            <option value="bottom">bottom</option>
+                            <option value="left">left</option>
+                            <option value="center">center</option>
+                        </select>
+
+                        <select class="target-type-select">
+                            <option value="top">top</option>
+                            <option value="right">right</option>
+                            <option value="bottom">bottom</option>
+                            <option selected="selected" value="left">left</option>
+                            <option value="center">center</option>
+                        </select>
+                        <p id="console-2" style="color: green;">targetType 参数值：top,right,left</p>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                (function() {
+                    var FixElement = require("jsmod/ui/fixElement"),
+                        fix;
+
+                    fix = new FixElement('<div class="mod-fixelement">Hello World!</div>', {
+                        target: "#target-2",
+                        targetType: "top, right, left"
+                    });
+
+                    $(".target-type-select").on("change", function () {
+                        var str = [];
+
+                        $(this).nextAll().each(function () {
+                            $(this).val("center");
+                        });
+
+                        $(".target-type-select").each(function () {
+                            str.push($(this).val());
+                        });
+
+                        str = str.join(",");
+
+                        try {
+                            fix.fixTo("#target-2", str);
+                            $("#console-2").css("color", "green").html("targetType 参数值：" + str);
+                        } catch (e) {
+                            $("#console-2").css("color", "red").html(e.message);
+                        }
+                    });
+                })()
+            </script>
+
+            <div class="demo">
+                <h4>【修改】修改已经创建元素的位置</h4>
+                <p class="desc">
+                    对于已经创建的实例，调用 fixTo 可以重新进行基于目标元素定位。<br/>
+                    调用 fix 可以重新进行基于位置定位。
+                </p>
+                <a id="modify-1-1" href="javascript:void(0);">点击创建</a>
+                <a id="modify-1-2" href="javascript:void(0);">来我这里</a>
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+
+            <script>
+                (function() {
+                    var FixElement = require("jsmod/ui/fixElement"),
+                        fix;
+
+                    $("#modify-1-1").click(function () {
+                        fix && fix.destroy();
+
+                        fix = new FixElement('<div class="mod-fixelement">好啊!</div>', {
+                            position: {left: 800, top: 600}
+                        });
+                    });
+
+                    $("#modify-1-2").click(function () {
+                        if (fix) {
+                            fix.fixTo("#modify-1-2", "right");
+                        }
+                    });
+                })()
+            </script>
+
+            <div class="demo">
+                <h4>【修改】重绘元素</h4>
+                <p class="desc">
+                    实例调用 redraw 函数并传入参数可以进行重新绘制，
+                    如果不传入任何参数则只进行重定位。<br/>
+                    需要注意的是重绘后之前对其绑定的事件也会失效
+                </p>
+                <a id="modify-2-1" href="javascript:void(0);">点击创建</a>
+                <a id="modify-2-2" href="javascript:void(0);">重绘一下</a>
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+
+            <script>
+                (function() {
+                    var FixElement = require("jsmod/ui/fixElement"),
+                        fix;
+
+                    $("#modify-2-1").click(function () {
+                        fix && fix.destroy();
+
+                        fix = new FixElement('<div class="mod-fixelement">来了!</div>', {
+                            target: "#modify-2-1"
+                        });
+                    });
+
+                    $("#modify-2-2").click(function () {
+                        if (fix) {
+                            fix.redraw('<div class="mod-fixelement">红了^^</br>了。。</div>');
+                        }
+                    });
+                })()
+            </script>
+
+            <div class="demo">
+                <h4>【修改】显示（隐藏）</h4>
+                <p class="desc">
+                    show, hide 显示或是隐藏定位元素，传入参数 {fade: true} 实现透明度渐变效果
+                </p>
+                <a id="modify-3-1" href="javascript:void(0);">显示</a>
+                <a id="modify-3-2" href="javascript:void(0);">隐藏</a>
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+
+            <script>
+                (function() {
+                    var FixElement = require("jsmod/ui/fixElement"),
+                        fix;
+
+                    fix = new FixElement('<div class="mod-fixelement">来了!</div>', {
+                        target: "#modify-3-1",
+                        preventShow: true
+                    });
+
+                    $("#modify-3-1").click(function () {
+                        fix.show();
+                    });
+
+                    $("#modify-3-2").click(function () {
+                        fix.hide({fade: true});
+                    });
+                })()
+            </script>
+
+            <!--inline[../../component/comment.html]-->
+        </div>
+        <!--inline[../../component/footer.html]-->
+    </body>
+</html>

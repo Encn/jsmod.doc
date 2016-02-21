@@ -1,0 +1,209 @@
+/**
+ * 颜色变量
+ * @author gaochao
+ */
+@x-white:       #ffffff;
+@x-white-smoke: #fbfbfb;
+
+@x-gray:        #dddddd;
+@x-gray-text:   #808080;
+@x-gray-dark:   #999999;
+@x-gray-smoke:  #e5e5e5;
+
+@x-blue:        #6f6fe1;
+@x-blue-light:  #9393cf;
+@x-blue-smoke:  #f6f9ff; 
+@x-blue-dark:   #599be4; 
+@x-blue-link:   #3366cc; 
+
+@x-black:       #000;
+@x-black-dark:  #333;
+@x-black-light: #666;
+
+@x-orange:      #E7672E;
+@x-orange-dark: #ff851b;
+
+@x-red:         #d46e70;
+@x-red-light:   #ff1f11;
+
+@x-green-smoke: #b4dbcf;
+@x-green:       #60b30a;
+
+/**
+ * css3动画
+ * @param {string} @property 需要动画的属性，默认all
+ * @param {string} @duration 持续时间，默认1s
+ */
+.x-transition(@property: all, @duration: 1s) {
+    transition-property: @property;
+    transition-duration: @duration;
+}
+
+.x-clearfix() {
+    *zoom: 1;
+    *overflow: hidden;
+
+    &:after,
+    &:before {
+        display: table;
+        content: "";
+    }
+
+    &:after {
+        clear: both;
+    }
+}
+
+.example-container {
+    padding: 20px 40px 50px 40px;
+    margin-bottom: 45px;
+    border-bottom: 10px solid darken(@x-gray, 15%);
+    border-top: 1px solid @x-gray-dark;
+    color: @x-white;
+    background: #02b2bf url(../images/example/example_bg.jpg);
+    box-shadow: 0px 2px 5px @x-gray-dark;
+
+    h2 {
+        margin: 20px;
+        padding: 10px 20px;
+        border: 1px solid @x-white;
+        border-radius: 5px;
+        background-color: @x-white;
+        color: @x-orange;
+
+        .more,
+        .api {
+            float: right;
+            margin-left: 20px;
+            color: @x-blue-link;
+            border-bottom: 2px solid @x-orange;
+        }
+    }
+
+    .desc {
+        margin-bottom: 10px;
+        border-bottom: 1px solid @x-gray-smoke;
+        color: @x-white-smoke;
+    }
+
+    .eg {
+        margin-bottom: 10px;
+        font-size: 14px;
+
+        .eg-item {
+            margin-bottom: 10px;
+
+            .title {
+                margin-bottom: 5px;
+            }
+        }
+
+        padding: 10px 20px;
+        border: 1px solid @x-white;
+        background-color: @x-white;
+        color: @x-orange;
+        border-radius: 5px;
+    }
+
+    .source {
+        float: right;
+        font-size: 14px;
+        padding: 5px 20px;
+        border-radius: 5px;
+        color: @x-white;
+        background-color: @x-orange;
+        box-shadow: 1px 1px 1px @x-black;
+    }
+
+    &.example-container-double {
+        background: #02b2bf url(../images/example/example_bg_2.jpg);
+
+        h2,
+        .eg {
+            background-color: #B1DECE;
+        }
+
+        .desc {
+            color: @x-gray-text;
+        }
+    }
+}
+
+.dialog-code {
+    overflow-x: auto;
+    padding: 5px 20px 20px 20px;
+
+    .close {
+        float: right;
+    }
+}
+
+.custom-select-input {
+    width: 50px;
+    padding: 5px 10px;
+    border: 1px solid @x-gray;
+    background: @x-white url(../images/example/switch_arrow_gray_down.png?__sprite) no-repeat 45px 9px;
+}
+
+.mod-select-fruit {
+    width: 70px;
+    border: 1px solid @x-gray;
+
+    .mod-dropdown-item {
+        cursor: pointer;
+        border-bottom: 1px solid @x-gray;
+    }
+
+    .mod-dropdown-item-active {
+        color: @x-red;
+    }
+}
+
+.custom-suggestion-input {
+    width: 300px;
+    padding: 5px 10px;
+    border: 1px solid @x-gray;
+}
+.mod-dropdown-baidu {
+    width: 320px;
+}
+
+.image-container {
+}
+
+.demo {
+    margin-bottom: 40px;
+    padding: 20px 10px 20px 10px;
+    border: 1px solid @x-gray;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0px 0px 4px @x-gray-text;
+    clear: both;
+
+    h4 {
+        margin-bottom: 20px;
+    }
+
+    .action {
+        .x-clearfix;
+        margin: 10px 0;
+    }
+
+    .source {
+        float: right;
+        clear: both;
+        padding: 5px 20px;
+        font-size: 14px;
+        color: @x-white;
+        background-color: @x-orange;
+        border-radius: 5px;
+        box-shadow: 1px 1px 1px @x-gray-text;
+    }
+
+    .desc {
+        margin: 15px 0 5px 0;
+        font-size: 14px;
+        line-height: 22px;
+        color: darken(@x-gray-text, 50%);
+    }
+}

@@ -1,0 +1,128 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>Select</title>
+        <!--inline[../../component/static.html]-->
+    </head>
+    <body>
+        <!--inline[../../component/header-example.html]-->
+        <div class="content">
+            <h1 class="title">
+                <a href="/api/select.html" target="_blank">API</a>
+                <a href="/test/select/index.html" target="_blank">Unit Test</a>
+                Select (多选菜单)
+            </h1>
+            
+            <div class="demo">
+                <h4>【创建】默认配置</h4>
+                <p class="desc">触发 seed 和 target 为不同元素</p>
+                <input id="input-1" type="text">
+                <a id="seed-1" href="javascript:void(0)">点击</a>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                var Select = require("jsmod/ui/fixElement/dropDown/select"),
+                    select;
+
+                select = new Select(["酒店", "餐饮", "电影"], {seed: "#seed-1", target: "#input-1", fun: function (index, value) {
+                    return {
+                        key: index,
+                        value: value,
+                        html: '<a href="javascript: void(0)">' + value + '</a>'
+                    }
+                }, offset: {
+                    left: -45
+                }});
+            </script>
+
+            <div class="demo">
+                <h4>【创建】默认配置</h4>
+                <p class="desc">触发 seed 和 target 为同一元素</p>
+                <input id="input-2" type="text">
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>    
+            <script>
+                var Select = require("jsmod/ui/fixElement/dropDown/select"),
+                    select;
+
+                select = new Select(["酒店", "餐饮", "电影"], {seed: "#input-2", target: "#input-2", fun: function (index, value) {
+                    return {
+                        key: index,
+                        value: value,
+                        html: '<a href="javascript: void(0)">' + value + '</a>'
+                    }
+                }, offset: {
+                    left: -45
+                }});
+            </script>
+
+            <div class="demo">
+                <h4>【事件】触发事件</h4>
+                <input id="input-3" type="text">
+                <span id="console-3"></span>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>        
+            <script>
+                var Select = require("jsmod/ui/fixElement/dropDown/select"),
+                    select;
+
+                select = new Select(["酒店", "餐饮", "电影"], {seed: "#input-3", target: "#input-3", fun: function (index, value) {
+                    return {
+                        key: index,
+                        value: value,
+                        html: '<a href="javascript: void(0)">' + value + '</a>'
+                    }
+                }, offset: {
+                    left: -45
+                }});
+
+                $(select).on("selectitem", function (e) {
+                    $("#console-3").html("你选择了" + e.value);
+                });
+            </script>
+
+            <div class="demo">
+                <h4>【修改】触发事件</h4>
+                <p class="desc">调用 active 函数实现默认设置</p>
+                <input id="input-4" type="text">
+                <span id="console-4"></span>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                var Select = require("jsmod/ui/fixElement/dropDown/select"),
+                    select;
+
+                select = new Select(["酒店", "餐饮", "电影"], {seed: "#input-4", target: "#input-4", fun: function (index, value) {
+                    return {
+                        key: index,
+                        value: value,
+                        html: '<a href="javascript: void(0)">' + value + '</a>'
+                    }
+                }, offset: {
+                    left: -45
+                }});
+
+                $(select).on("selectitem", function (e) {
+                    $("#console-4").html("你选择了" + e.value);
+                });
+
+                select.active(0);
+            </script>
+            <!--inline[../../component/comment.html]-->
+        </div>
+
+        <!--inline[../../component/footer.html]-->
+    </body>
+</html>

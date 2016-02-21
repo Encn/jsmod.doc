@@ -1,0 +1,71 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>Suggestion</title>
+        <!--inline[../../component/static.html]-->
+    </head>
+    <body>
+        <!--inline[../../component/header-example.html]-->
+
+        <div class="content">
+            <h1 class="title">
+                <a href="/api/suggestion.html" target="_blank">API</a>
+                Suggestion (输入提示)
+            </h1>
+
+            <div class="demo">
+                <p class="desc">通过配置可实现 json、jsonp 调用远程数据, handleData 处理回调数据其返回值为设定的数据</p>
+                <h4>【创建】jsonp 创建输入提示</h4>
+                <input style="width: 200px;" id="create1-1" href="javascript:void(0)" placeholder="下拉"/>
+
+                <div class="action">
+                    <a class="source" href="javascript:void(0);">查看源码</a>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    var Suggestion = require("jsmod/ui/fixElement/dropDown/suggestion"),
+                        s, option;
+
+                    option = {
+                        target: "#create1-1",
+                        url: function (wd) {
+                            return "http://map.baidu.com/su?wd=" + encodeURIComponent(wd)
+                        },
+                        jsonpOption: {
+                            jsonp: "callback"
+                        },
+                        sendData: function (val) {
+                            return {
+                                wd: val,
+                                cid: 131,
+                                type: 0
+                            }
+                        },
+                        handleData: function (json) {
+                            return json.s;
+                        },
+                        fun: function (index, item) {
+                            var val = $(this.target).val();
+
+                            return {
+                                key: item.split("$")[3],
+                                value: item.split("$")[3]
+                            }
+                        },
+                        className: "mod-dropdown-my"
+                    }
+
+                    d = new Suggestion(option);
+
+                    $(d).on("selectitem", function (e, c) {
+                        $("#create1-1").val(c.value);
+                    });
+                })();
+            </script>
+            <!--inline[../../component/comment.html]-->
+        </div>
+
+        <!--inline[../../component/footer.html]-->
+    </body>
+</html>

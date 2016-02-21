@@ -1,0 +1,48 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>home</title>
+        <!--inline[./component/static.html]-->
+    </head>
+    <body>
+        <!--inline[./component/header.html]-->
+        <div class="content">
+            <div class="home-banner" id="home-banner">
+                <a class="pre" href="javascript:void(0)"></a>
+                <a class="next" href="javascript:void(0)"></a>
+            </div>
+
+            <div class="home-desc">
+                <p class="guide">
+                    无样式依赖，模块化定义的前端 UI 组件集合
+                </p>
+
+                <dl>
+                    <dt>Ta 的目标</dt>
+                    <dd>创建可完全自由扩展、适用于任何业务场景的前端 UI 组件</dd>
+                </dl>
+
+                <dl>
+                    <dt>Ta 的五脏</dt>
+                    <dd>模块化设计，OO 的编程方式，<a target="_blank" href="/test/index.html">Qunit</a> 全面单测，<a target="_blank" href="/api/index.html">JSDOC</a> 文档产生，大量 <a target="_blank" href="/views/example.html">示例文档</a></dd>
+                </dl>
+
+                <pre>
+                    <code>
+    var FixElement = require("jsmod/ui/fixElement");
+
+    new FixElement('&lt;div class="module"&gt;Hello World!&lt;/div&gt;', {
+        position: {left: 100, top: 200}
+    });
+                    </code>
+                </pre>
+
+                <div class="actions">
+                    <a class="watch" href="/views/example.html">更多细节</a>
+                </div>
+            </div>
+        </div>
+
+        <!--inline[./component/footer.html]-->
+    </body>
+</html>
