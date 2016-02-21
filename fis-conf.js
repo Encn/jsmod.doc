@@ -1,12 +1,15 @@
 //产品名称
 fis.set('namespace', 'jsmod');
 
+//模块名称
+fis.set('module', 'jsmod.pc');
+
 //只处理 src 目录下的文件及 map.json（资源映射）
 fis.set('project.files', ['src/**', 'map.json']);
 
 //设置 HTML 部署路径
 fis.match(/^\/src\/web\/\/view\/(.*\.html)$/i, {
-  release: 'templates/${module}/$1',
+  release: 'templates/$1',
   isMod: true
 });
 
