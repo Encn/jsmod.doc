@@ -1,1 +1,1 @@
-./node_modules/fis3/bin/fis.js release online /root/server/
+./node_modules/fis3/bin/fis.js release online -d /root/server/
