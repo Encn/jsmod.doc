@@ -22,7 +22,7 @@ fis.config.merge({
                 release : false
             },
             {
-                reg: /^\/api\/(.*)$/i,
+                reg: /^\/src\/api\/(.*)$/i,
                 release: '/api/$1'
             }
         ]
